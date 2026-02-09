@@ -1,0 +1,532 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
+}
+
+/* Custom Scrollbar from app.html */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Loading Dots from app.html */
+.dot-flashing {
+    position: relative; width: 6px; height: 6px; border-radius: 5px;
+    background-color: #6366f1; color: #6366f1;
+    animation: dot-flashing 1s infinite linear alternate;
+    animation-delay: 0.5s;
+}
+.dot-flashing::before, .dot-flashing::after {
+    content: ''; display: inline-block; position: absolute; top: 0;
+    width: 6px; height: 6px; border-radius: 5px; background-color: #6366f1; color: #6366f1;
+    animation: dot-flashing 1s infinite alternate;
+}
+.dot-flashing::before { left: -10px; animation-delay: 0s; }
+.dot-flashing::after { left: 10px; animation-delay: 1s; }
+
+@keyframes dot-flashing {
+    0% { background-color: #6366f1; }
+    50%, 100% { background-color: rgba(99, 102, 241, 0.2); }
+}
+
+/* Styles from index.html for Preview */
+/* Scoped or generic styles */
+
+/* A4 Paper Dimensions */
+.a4-page {
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    margin: 0 auto;
+    padding: 0; /* Let content handle padding or use what index.html had */
+    color: #1a202c;
+}
+
+/* Styles specifically for the content from index.html */
+/* Copied from index.html > style */
+
+.page {
+    width: 210mm;
+    height: 297mm;
+    /* Standard A4 Height */
+    background: white;
+    padding: 40px;
+    /* box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); */ /* Handled by a4-page container */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-poppins), sans-serif;
+}
+
+.page * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.page-1-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
+}
+
+.header-container {
+    display: flex;
+    gap: 25px;
+    height: 320px;
+}
+
+.profile-photo {
+    flex: 0 0 40%;
+    background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-details {
+    flex: 1;
+    background-color: #FFFBF2;
+    border-radius: 12px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.name {
+    color: #2A3B90;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.title {
+    color: #666;
+    font-size: 16px;
+    font-weight: 400;
+    margin-top: 5px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ffe0b2;
+    padding-bottom: 15px;
+    display: inline-block;
+    width: 100%;
+}
+
+.stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stats-list li {
+    color: #2A3B90;
+    font-size: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.stats-list li::before {
+    content: "•";
+    color: #2A3B90;
+    font-size: 20px;
+    margin-right: 10px;
+    line-height: 1;
+}
+
+.social-links {
+    margin-top: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ffe0b2;
+}
+
+.social-icon {
+    font-size: 28px;
+    text-decoration: none;
+    color: #2A3B90; /* Default color if not specified */
+}
+
+/* Font Awesome replacements if not using the library, but user requested existing content.
+   If FontAwesome is not loaded, these icons won't show.
+   We should probably add FontAwesome CDN to layout or assume it's there. 
+   For now, I'll add the styles, but I should add the CDN link to layout.tsx */
+
+.fa-linkedin { color: #0077b5; }
+.fa-facebook { color: #1877f2; }
+.fa-instagram {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.website {
+    margin-left: auto;
+    color: #2A3B90;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.prompt-box {
+    background-color: #E6F2FF;
+    border: 1px solid #90CAF9;
+    border-radius: 12px;
+    min-height: auto;
+    height: auto;
+    flex-grow: 1;
+    padding: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.prompt-text {
+    color: #5C7CFA;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.roles-section {
+    background-color: #F3F9EA;
+    border: 1px solid #C5E1A5;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.section-title {
+    text-align: center;
+    color: #004D40;
+    font-weight: 700;
+    font-size: 18px;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    margin-top: 5px;
+}
+
+.roles-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.role-card {
+    flex: 1;
+    text-align: center;
+}
+
+.role-icon {
+    font-size: 32px;
+    color: #2E7D32;
+    margin-bottom: 10px;
+    height: 50px;
+}
+
+.role-title {
+    color: #004D40;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.role-desc {
+    color: #455A64;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.brands-section {
+    background-color: #FFF0E0;
+    border: 1px solid #FFCC80;
+    border-radius: 12px;
+    padding: 15px;
+    flex-grow: 0;
+}
+
+.brands-title {
+    color: #A04000;
+    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 18px;
+    margin-bottom: 15px;
+}
+
+.brands-logos {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding-left: 20px;
+}
+
+.logo-tworks {
+    width: 60px;
+    height: 60px;
+    background: #222;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.logo-startup {
+    width: 60px;
+    height: 60px;
+    background: #D32F2F;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1;
+}
+
+/* Page 2 Styles */
+.page-2-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: 100%;
+}
+
+.section-box {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 5px;
+    position: relative;
+}
+
+.section-header {
+    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.impact-section {
+    background-color: #EBF5FB;
+    border: 1px solid #AED6F1;
+}
+
+.impact-header { color: #2E86C1; }
+
+.impact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.impact-item:last-child { margin-bottom: 0; }
+
+.impact-icon {
+    flex: 0 0 50px;
+    color: #2E86C1;
+    font-size: 24px;
+    text-align: center;
+    padding-top: 5px;
+}
+
+.impact-text {
+    color: #34495E;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.highlight-blue {
+    color: #2E86C1;
+    font-weight: 600;
+}
+
+.awards-section {
+    background-color: #F9FBE7;
+    border: 1px solid #DCE775;
+}
+
+.awards-header { color: #2E5848; }
+
+.awards-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.awards-list li {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 8px;
+    padding-left: 15px;
+    position: relative;
+    line-height: 1.4;
+}
+
+.awards-list li::before {
+    content: "•";
+    color: #2E5848;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+    font-size: 18px;
+    line-height: 0.8;
+}
+
+.award-badge-icon {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 60px;
+    color: #E0E0E0;
+    opacity: 0.6;
+    z-index: 0;
+}
+
+.bold-green {
+    font-weight: 700;
+    color: #1B5E20;
+}
+
+.keynote-section {
+    background-color: white;
+    border: 1px solid #FFCC80;
+}
+
+.keynote-header { color: #A84418; }
+
+.logos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.logo-placeholder {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+    padding: 5px 10px;
+}
+
+.logo-icrisat {
+    color: #00695C;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.logo-univ {
+    border-radius: 50%;
+    border: 2px solid #B71C1C;
+    color: #B71C1C;
+    width: 40px;
+    height: 40px;
+    font-size: 8px;
+    text-align: center;
+}
+
+.logo-ibs {
+    color: #B71C1C;
+    font-family: serif;
+    font-size: 20px;
+}
+
+.logo-jci {
+    color: #0288D1;
+    font-weight: 900;
+    font-size: 22px;
+    font-style: italic;
+}
+
+.logo-microsoft {
+    color: #737373;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.microsoft-icon { color: #F25022; }
+
+.summary-section {
+    background-color: #FFF3E0;
+    border: 1px solid #FFCC80;
+    color: #6D4C41;
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+.contact-section {
+    background-color: #F3E5F5;
+    border: 1px solid #BA68C8;
+    padding: 15px;
+    margin-top: auto;
+}
+
+.contact-grid {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.contact-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.contact-icon {
+    font-size: 24px;
+    color: #4A148C;
+    margin-bottom: 5px;
+}
+
+.contact-text {
+    color: #4A148C;
+    font-size: 14px;
+    font-weight: 500;
+}
