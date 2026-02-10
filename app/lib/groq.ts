@@ -14,12 +14,16 @@ export const extractProfileFromLinkedIn = async (linkedInJson: unknown): Promise
     Structure:
     - fullName
     - tagline
-    - aboutMe
-    - expertiseAreas (up to 5)
+    - profilePhoto (use pictureUrl if available)
+    - aboutMe (use the 'summary' field if available)
+    - expertiseAreas (up to 5, derive from content or skills)
     - topHighlights (3 key achievements from the headline or bio)
     - professionalTitle
-    - technicalSkills
-    - workExperience: { name, role, duration }
+    - children: [{ name, role, duration }] -> Map this to 'brands' or 'positions'
+    - positions: [{ title, company, location, duration, description, logo }]
+    - education: [{ schoolName, degreeName, fieldOfStudy, duration }]
+    - skills: [string]
+    - socialLinks: { linkedin, website }
     
     JSON Data:
     ${JSON.stringify(linkedInJson)}

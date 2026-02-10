@@ -46,6 +46,21 @@ export const ProfileSchema = z.object({
   // Section 3: Brands & Work Experience
   workExperienceType: z.enum(["Multiple", "Single"]).default("Multiple"),
   brands: z.array(BrandSchema).optional(),
+  positions: z.array(z.object({
+    title: z.string(),
+    company: z.string(),
+    location: z.string().optional(),
+    duration: z.string().optional(),
+    description: z.string().optional(),
+    logo: z.string().optional(),
+  })).optional(),
+  education: z.array(z.object({
+    schoolName: z.string(),
+    degreeName: z.string().optional(),
+    fieldOfStudy: z.string().optional(),
+    duration: z.string().optional(),
+  })).optional(),
+  skills: z.array(z.string()).optional(),
   focusBrand: z.object({
     name: z.string().optional(),
     logo: z.string().optional(),
