@@ -65,12 +65,12 @@ export const useProfileStore = create<ProfileState>((set) => ({
     profileData: { ...INITIAL_PROFILE },
     messages: [
         {
-            text: "Hey there! 👋 I'm your profile architect. I help professionals and entrepreneurs build powerful, standout profiles. You can start by telling me a bit about yourself — your name, what you do, and what makes you great at it!",
+            text: "Welcome! I'm here to help you build a profile that truly represents who you are and what you bring to the table. Let's start simple — what's your name and what do you do?",
             sender: 'bot',
             suggestedReplies: [
-                "Let me introduce myself",
-                "I already imported LinkedIn, let's refine",
-                "What kind of profile can you build?",
+                "I'm a business owner",
+                "I'm a working professional",
+                "I run my own practice",
             ],
         },
     ],

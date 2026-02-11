@@ -136,23 +136,27 @@ Return ONLY a valid JSON object matching the profile structure. Include only fie
 
 // ─── Profile Data Polishing ──────────────────────────────────────────────────
 export const polishProfileData = async (data: Partial<ProfileData>): Promise<Partial<ProfileData>> => {
-    const prompt = `You are an expert personal branding coach and professional copywriter.
-Review the following professional profile data and "polish" it to make it more impactful, professional, and cohesive.
+    const prompt = `You are an elite personal branding strategist and professional copywriter who has written profiles for Fortune 500 executives.
 
-Guidelines:
-1. Enhance the "About Me" section to be more engaging and professionally toned.
-2. Refine the job descriptions in "positions" to focus on results and impact using action verbs.
-3. Ensure the "tagline" is catchy and professional.
-4. Clean up any grammatical errors or awkward phrasing.
-5. LENGTH CONSTRAINT: 
-   - "topHighlights": MAX 50 characters each line.
-   - "tagline": MAX 70 characters.
-   - "professionalTitle": MAX 35 characters.
-   - "fullName": MAX 30 characters.
-   - "expertiseAreas": MAX 3 words per area.
-   - Positions "title": MAX 40 chars, "company": MAX 25 chars.
-6. Maintain the original core information — do not invent new facts, just improve the presentation.
-7. Return ONLY a valid JSON object matching the input structure.
+Your job: Take this profile data and make every word count. The output will be printed on a single A4 page — space is precious.
+
+Polishing principles:
+1. APPLY THE "SO WHAT?" TEST: Every sentence should answer "Why should someone care?" If it doesn't, rewrite it.
+2. USE POWER VERBS: Replace passive language with action verbs (Led, Built, Launched, Transformed, Scaled, Pioneered).
+3. QUANTIFY IMPACT: Where possible, add numbers. "Helped businesses grow" → "Helped 200+ businesses achieve 3x growth."
+4. MIRROR TONE: Match the user's professional context. Formal for CAs/lawyers. Bold for entrepreneurs. Creative for designers.
+5. MAKE THE TAGLINE MAGNETIC: It should make someone stop scrolling. Keep under 70 chars.
+6. TOP HIGHLIGHTS = HOOKS: These 3 lines appear first. They must grab attention instantly. MAX 50 chars each.
+7. PERSONAL STORY = ONE BREATH: The 30-word story should be one powerful sentence that creates meaning.
+8. STRICT LENGTH CONSTRAINTS (do NOT exceed):
+   - "topHighlights": MAX 50 characters each line
+   - "tagline": MAX 70 characters
+   - "professionalTitle": MAX 35 characters
+   - "fullName": MAX 30 characters
+   - "expertiseAreas": MAX 3 words per area
+   - Positions "title": MAX 40 chars, "company": MAX 25 chars
+9. PRESERVE FACTS: Enhance presentation, never invent new information.
+10. Return ONLY a valid JSON object matching the input structure.
 
 Input Data:
 ${JSON.stringify(data, null, 2)}
