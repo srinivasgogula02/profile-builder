@@ -151,7 +151,7 @@
 .header-container {
     display: flex;
     gap: 25px;
-    height: 320px;
+    min-height: 320px;
 }
 
 .profile-photo {
@@ -176,9 +176,9 @@
     background-color: #FFFBF2;
     border-radius: 12px;
     padding: 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    max-height: 320px;
+    overflow: hidden;
 }
 
 .name {
@@ -212,8 +212,11 @@
     font-size: 15px;
     margin-bottom: 10px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     font-weight: 500;
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .stats-list li::before {
@@ -221,7 +224,7 @@
     color: #2A3B90;
     font-size: 20px;
     margin-right: 10px;
-    line-height: 1;
+    line-height: 1.2;
 }
 
 .social-links {

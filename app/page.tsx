@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { renderProfile } from './lib/default-content';
 import { useProfileStore } from './lib/store';
-import { extractProfileFromLinkedIn, getAiChatResponse } from './lib/groq';
+import { extractProfileFromLinkedIn, getAiChatResponse, polishProfileData } from './lib/groq';
 import { SECTIONS, computeSectionProgress } from './lib/ai-prompt';
+import EditProfileForm from './components/EditProfileForm';
+import { ProfileData } from './lib/schema';
 
 export default function Home() {
   const {
@@ -33,6 +35,7 @@ export default function Home() {
     setIsTyping,
     setCurrentSection,
     setSectionProgress,
+    updateProfileField,
   } = useProfileStore();
 
   const [userInput, setUserInput] = useState('');
@@ -45,6 +48,11 @@ export default function Home() {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [scrapeMessage, setScrapeMessage] = useState('');
+
+  // Edit Form State
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [tempProfileData, setTempProfileData] = useState<Partial<ProfileData> | null>(null);
+  const [isPolishing, setIsPolishing] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -97,19 +105,13 @@ export default function Home() {
         setScrapeMessage('Profile scraped! Processing with AI...');
 
         const extractedData = await extractProfileFromLinkedIn(rawData);
-        setProfileData(extractedData);
+        setTempProfileData(extractedData);
 
-        addMessage({
-          text: "I've imported your LinkedIn profile! I can see your name, headline, and experience. Let me help you refine this into a powerful professional profile. What would you like to work on first — your personal story, or should I help craft your 'About Me'?",
-          sender: 'bot',
-          suggestedReplies: [
-            "Help me write my About Me",
-            "Let's craft my personal story",
-            "Let me review what was imported first",
-          ],
-        });
-
-        setTimeout(() => setShowLinkedinModal(false), 2000);
+        // Brief delay for success message visibility
+        setTimeout(() => {
+          setShowLinkedinModal(false);
+          setShowEditForm(true);
+        }, 1500);
       } else {
         const data = await res.json().catch(() => null);
         setScrapeStatus('error');
@@ -118,6 +120,37 @@ export default function Home() {
     } catch {
       setScrapeStatus('error');
       setScrapeMessage('Could not connect to the scraper server. Make sure the backend is running on port 8000.');
+    }
+  };
+
+  const handleSaveEdit = async (editedData: Partial<ProfileData>) => {
+    setIsPolishing(true);
+    try {
+      // Polish the data with AI before saving
+      const polishedData = await polishProfileData(editedData);
+      setProfileData(polishedData);
+      setShowEditForm(false);
+
+      addMessage({
+        text: `I've refined your details to make them more professional. I can see your experience as ${polishedData.professionalTitle}. Let me help you refine this into a powerful professional profile. What would you like to work on first — your personal story, or should I help craft your 'About Me'?`,
+        sender: 'bot',
+        suggestedReplies: [
+          "Help me write my About Me",
+          "Let's craft my personal story",
+          "Explain my expertise areas",
+        ],
+      });
+    } catch (error) {
+      console.error("Error saving/polishing profile:", error);
+      // Fallback to saving raw data if polishing fails
+      setProfileData(editedData);
+      setShowEditForm(false);
+      addMessage({
+        text: "I've saved your information. Let's get started on refining it further. What would you like to work on first?",
+        sender: 'bot',
+      });
+    } finally {
+      setIsPolishing(false);
     }
   };
 
@@ -289,7 +322,11 @@ export default function Home() {
                 </button>
 
                 <button
-                  onClick={() => setShowLinkedinModal(false)}
+                  onClick={() => {
+                    setShowLinkedinModal(false);
+                    setTempProfileData({});
+                    setShowEditForm(true);
+                  }}
                   disabled={scrapeStatus === 'loading'}
                   className="w-full py-2.5 rounded-xl text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors disabled:opacity-50"
                 >
@@ -438,6 +475,21 @@ export default function Home() {
           </p>
         </div>
       </aside>
+
+      {/* Edit Profile Modal */}
+      {showEditForm && tempProfileData && (
+        <EditProfileForm
+          initialData={tempProfileData}
+          onSave={handleSaveEdit}
+          loading={isPolishing}
+          onCancel={() => {
+            setShowEditForm(false);
+            if (Object.keys(tempProfileData || {}).length === 0) {
+              // Only add if we came from 'build from scratch' and haven't started yet
+            }
+          }}
+        />
+      )}
 
       {/* Main Preview Area */}
       <main className="flex-1 flex flex-col bg-slate-50/50 relative h-full">

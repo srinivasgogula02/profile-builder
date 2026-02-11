@@ -81,18 +81,18 @@ export const extractProfileFromLinkedIn = async (linkedInJson: unknown): Promise
     const prompt = `You are an expert profile builder. Extract information from the following LinkedIn JSON data and map it to a professional profile structure.
 
 Structure to fill (JSON only):
-- fullName: Display name
-- tagline: LinkedIn headline
+- fullName: Display name (MAX 30 characters)
+- tagline: LinkedIn headline (MAX 70 characters)
 - profilePhoto: pictureUrl if available
-- aboutMe: summary field content
-- expertiseAreas: up to 5, derived from content/skills
-- topHighlights: 3 key achievement lines from headline/bio (look for numbers, metrics, titles)
-- professionalTitle: Professional qualifications
-- positions: [{ title, company, location, duration, description, logo }]
-- education: [{ schoolName, degreeName, fieldOfStudy, duration }]
-- skills: array of skill strings
+- aboutMe: summary field content (keep it to 3-4 powerful sentences)
+- expertiseAreas: up to 5, each MAX 3 words
+- topHighlights: exactly 3 key achievement lines (MAX 50 characters per line). Be extremely concise.
+- professionalTitle: Professional qualifications (MAX 35 characters)
+- positions: [{ title (MAX 40 chars), company (MAX 25 chars), location, duration, description (MAX 100 chars), logo }]
+- education: [{ schoolName (MAX 40 chars), degreeName, fieldOfStudy, duration }]
+- skills: array of short skill strings
 - socialLinks: { linkedin, website }
-- brands: [{ name, role, duration }] — from positions/companies
+- brands: [{ name (MAX 25 chars), role, duration }] — from positions/companies
 
 JSON Data:
 ${JSON.stringify(linkedInJson)}
@@ -114,6 +114,48 @@ Return ONLY a valid JSON object matching the profile structure. Include only fie
         console.error('Error extracting LinkedIn profile:', error);
     }
     return {};
+};
+
+// ─── Profile Data Polishing ──────────────────────────────────────────────────
+export const polishProfileData = async (data: Partial<ProfileData>): Promise<Partial<ProfileData>> => {
+    const prompt = `You are an expert personal branding coach and professional copywriter.
+Review the following professional profile data and "polish" it to make it more impactful, professional, and cohesive.
+
+Guidelines:
+1. Enhance the "About Me" section to be more engaging and professionally toned.
+2. Refine the job descriptions in "positions" to focus on results and impact using action verbs.
+3. Ensure the "tagline" is catchy and professional.
+4. Clean up any grammatical errors or awkward phrasing.
+5. LENGTH CONSTRAINT: 
+   - "topHighlights": MAX 50 characters each line.
+   - "tagline": MAX 70 characters.
+   - "professionalTitle": MAX 35 characters.
+   - "fullName": MAX 30 characters.
+   - "expertiseAreas": MAX 3 words per area.
+   - Positions "title": MAX 40 chars, "company": MAX 25 chars.
+6. Maintain the original core information — do not invent new facts, just improve the presentation.
+7. Return ONLY a valid JSON object matching the input structure.
+
+Input Data:
+${JSON.stringify(data, null, 2)}
+
+Return ONLY the polished JSON object.`;
+
+    try {
+        const result = await streamText({
+            model: getModel(),
+            messages: [{ role: 'user', content: prompt }],
+        });
+
+        const fullText = await result.text;
+        if (fullText) {
+            const cleanText = fullText.replace(/```json\n?|\n?```/g, '');
+            return JSON.parse(cleanText);
+        }
+    } catch (error) {
+        console.error('Error polishing profile data:', error);
+    }
+    return data; // Return original data if polishing fails
 };
 
 // ─── Chat Response Types ──────────────────────────────────────────────────────
