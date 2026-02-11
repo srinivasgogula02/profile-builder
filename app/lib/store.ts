@@ -26,6 +26,11 @@ interface ProfileState {
     showAuthModal: boolean;
     pendingAction: (() => void) | null;
 
+    // Persistence
+    hasCompletedLinkedIn: boolean;
+    isSaving: boolean;
+    profileLoaded: boolean;
+
     // Actions
     setProfileData: (data: Partial<ProfileData>) => void;
     mergeProfileData: (data: Partial<ProfileData>) => void;
@@ -40,6 +45,9 @@ interface ProfileState {
     setUser: (user: User | null) => void;
     setShowAuthModal: (show: boolean) => void;
     setPendingAction: (action: (() => void) | null) => void;
+    setHasCompletedLinkedIn: (v: boolean) => void;
+    setIsSaving: (v: boolean) => void;
+    setProfileLoaded: (v: boolean) => void;
 }
 
 const INITIAL_PROFILE: Partial<ProfileData> = {
@@ -86,6 +94,11 @@ export const useProfileStore = create<ProfileState>((set) => ({
     user: null,
     showAuthModal: false,
     pendingAction: null,
+
+    // Persistence
+    hasCompletedLinkedIn: false,
+    isSaving: false,
+    profileLoaded: false,
 
     // Actions
     setProfileData: (data) =>
@@ -151,4 +164,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
     setUser: (user) => set({ user }),
     setShowAuthModal: (show) => set({ showAuthModal: show }),
     setPendingAction: (action) => set({ pendingAction: action }),
+    setHasCompletedLinkedIn: (v) => set({ hasCompletedLinkedIn: v }),
+    setIsSaving: (v) => set({ isSaving: v }),
+    setProfileLoaded: (v) => set({ profileLoaded: v }),
 }));

@@ -22,6 +22,7 @@ import { SECTIONS, computeSectionProgress } from './lib/ai-prompt';
 import EditProfileForm from './components/EditProfileForm';
 import AuthModal from './components/AuthModal';
 import { supabase } from './lib/supabase';
+import { loadProfile, saveProfile, markLinkedinImported } from './lib/db';
 import { ProfileData } from './lib/schema';
 
 export default function Home() {
@@ -43,6 +44,12 @@ export default function Home() {
     setUser,
     setShowAuthModal,
     setPendingAction,
+    hasCompletedLinkedIn,
+    setHasCompletedLinkedIn,
+    isSaving,
+    setIsSaving,
+    profileLoaded,
+    setProfileLoaded,
   } = useProfileStore();
 
   const [userInput, setUserInput] = useState('');
@@ -50,8 +57,8 @@ export default function Home() {
   const [downloading, setDownloading] = useState(false);
   const [profileHtml, setProfileHtml] = useState('');
 
-  // LinkedIn Modal State
-  const [showLinkedinModal, setShowLinkedinModal] = useState(true);
+  // LinkedIn Modal State — start hidden until we know if user needs it
+  const [showLinkedinModal, setShowLinkedinModal] = useState(false);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [scrapeStatus, setScrapeStatus] = useState<'idle' | 'loading' | 'success' | 'processing' | 'error'>('idle');
   const [scrapeMessage, setScrapeMessage] = useState('');
@@ -96,19 +103,74 @@ export default function Home() {
     }
   }, [messages, isTyping]);
 
-  // ─── Auth listener ─────────────────────────────────────────────────────────
+  // ─── Auth listener + DB profile load ──────────────────────────────────────
   useEffect(() => {
+    const loadUserProfile = async (userId: string) => {
+      const row = await loadProfile(userId);
+      if (row) {
+        // Returning user — restore their profile
+        setProfileData(row.profile_data);
+        setHasCompletedLinkedIn(row.linkedin_imported);
+        setProfileLoaded(true);
+        // Only show LinkedIn modal if they never completed it
+        if (!row.linkedin_imported) {
+          setShowLinkedinModal(true);
+        }
+      } else {
+        // First-time user — show LinkedIn popup
+        setProfileLoaded(true);
+        setShowLinkedinModal(true);
+      }
+    };
+
     // Check existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      } else {
+        // Not logged in — show LinkedIn modal (auth gate will handle login)
+        setShowLinkedinModal(true);
+        setProfileLoaded(true);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const prevUser = useProfileStore.getState().user;
       setUser(session?.user ?? null);
+      // Load profile when user just logged in (wasn't logged in before)
+      if (session?.user && !prevUser) {
+        loadUserProfile(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Auto-save to DB (debounced) ────────────────────────────────────────────
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Don't save until profile is loaded from DB and user is authenticated
+    if (!user || !profileLoaded) return;
+    // Don't save empty profiles
+    if (!profileData.fullName && !profileData.aboutMe) return;
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+    saveTimerRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      const html = renderProfile(profileData);
+      await saveProfile(user.id, profileData, html);
+      setIsSaving(false);
+    }, 3000);
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileData, user, profileLoaded]);
 
   // Helper: require auth before an action
   const requireAuth = useCallback((action: () => void): boolean => {
@@ -154,6 +216,10 @@ export default function Home() {
 
         setScrapeStatus('success');
         setScrapeMessage('All done! Opening editor...');
+
+        // Mark LinkedIn as imported in DB
+        if (user) markLinkedinImported(user.id);
+        setHasCompletedLinkedIn(true);
 
         // Brief delay for success message visibility
         setTimeout(() => {
@@ -383,14 +449,16 @@ export default function Home() {
 
                 <button
                   onClick={() => {
-                    if (!requireAuth(() => {
+                    const doSkip = () => {
                       setShowLinkedinModal(false);
                       setTempProfileData({});
                       setShowEditForm(true);
-                    })) return;
-                    setShowLinkedinModal(false);
-                    setTempProfileData({});
-                    setShowEditForm(true);
+                      // Mark LinkedIn as completed (skipped) so popup won't show on refresh
+                      setHasCompletedLinkedIn(true);
+                      if (user) markLinkedinImported(user.id);
+                    };
+                    if (!requireAuth(doSkip)) return;
+                    doSkip();
                   }}
                   disabled={scrapeStatus === 'loading'}
                   className="w-full py-2.5 rounded-xl text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors disabled:opacity-50"
@@ -414,9 +482,36 @@ export default function Home() {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="font-bold text-lg text-[#01334c] tracking-tight">ProfileArchitect</h1>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">AI Workspace</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">AI Workspace</p>
+                {isSaving && (
+                  <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
+                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
+                    Saving
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => {
+              if (!requireAuth(() => {
+                setLinkedinUrl('');
+                setScrapeStatus('idle');
+                setScrapeMessage('');
+                setShowLinkedinModal(true);
+              })) return;
+              setLinkedinUrl('');
+              setScrapeStatus('idle');
+              setScrapeMessage('');
+              setShowLinkedinModal(true);
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#0077b5] bg-[#0077b5]/5 hover:bg-[#0077b5]/10 border border-[#0077b5]/20 transition-all duration-200 hover:shadow-sm active:scale-95"
+            title="Import from LinkedIn"
+          >
+            <Linkedin className="w-4 h-4" />
+            <span className="hidden sm:inline">Import LinkedIn</span>
+          </button>
         </div>
 
         {/* Section Progress Pills */}
