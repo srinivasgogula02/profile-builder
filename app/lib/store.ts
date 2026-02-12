@@ -31,6 +31,10 @@ interface ProfileState {
     isSaving: boolean;
     profileLoaded: boolean;
 
+    // Guided Review
+    showGuidedReview: boolean;
+    guidedReviewStep: number;
+
     // Actions
     setProfileData: (data: Partial<ProfileData>) => void;
     mergeProfileData: (data: Partial<ProfileData>) => void;
@@ -48,6 +52,8 @@ interface ProfileState {
     setHasCompletedLinkedIn: (v: boolean) => void;
     setIsSaving: (v: boolean) => void;
     setProfileLoaded: (v: boolean) => void;
+    setShowGuidedReview: (v: boolean) => void;
+    setGuidedReviewStep: (step: number) => void;
 }
 
 const INITIAL_PROFILE: Partial<ProfileData> = {
@@ -99,6 +105,10 @@ export const useProfileStore = create<ProfileState>((set) => ({
     hasCompletedLinkedIn: false,
     isSaving: false,
     profileLoaded: false,
+
+    // Guided Review
+    showGuidedReview: false,
+    guidedReviewStep: 0,
 
     // Actions
     setProfileData: (data) =>
@@ -167,4 +177,6 @@ export const useProfileStore = create<ProfileState>((set) => ({
     setHasCompletedLinkedIn: (v) => set({ hasCompletedLinkedIn: v }),
     setIsSaving: (v) => set({ isSaving: v }),
     setProfileLoaded: (v) => set({ profileLoaded: v }),
+    setShowGuidedReview: (v) => set({ showGuidedReview: v }),
+    setGuidedReviewStep: (step) => set({ guidedReviewStep: step }),
 }));

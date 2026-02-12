@@ -15,12 +15,14 @@ import {
   ExternalLink,
   Sparkles,
   LogOut,
+  Pencil,
 } from 'lucide-react';
 import { renderProfile } from './lib/default-content';
 import { useProfileStore } from './lib/store';
 import { extractProfileFromLinkedIn, getAiChatResponse, polishProfileData } from './lib/groq';
 import { SECTIONS, computeSectionProgress } from './lib/ai-prompt';
 import EditProfileForm from './components/EditProfileForm';
+import GuidedReviewOverlay from './components/GuidedReviewOverlay';
 import AuthModal from './components/AuthModal';
 import { supabase } from './lib/supabase';
 import { loadProfile, saveProfile, markLinkedinImported } from './lib/db';
@@ -51,6 +53,8 @@ export default function Home() {
     setIsSaving,
     profileLoaded,
     setProfileLoaded,
+    showGuidedReview,
+    setShowGuidedReview,
   } = useProfileStore();
 
   const [userInput, setUserInput] = useState('');
@@ -252,27 +256,30 @@ export default function Home() {
       setProfileData(polishedData);
       setShowEditForm(false);
 
-      addMessage({
-        text: `I've refined your details to make them more professional. I can see your experience as ${polishedData.professionalTitle}. Let me help you refine this into a powerful professional profile. What would you like to work on first — your personal story, or should I help craft your 'About Me'?`,
-        sender: 'bot',
-        suggestedReplies: [
-          "Help me write my About Me",
-          "Let's craft my personal story",
-          "Explain my expertise areas",
-        ],
-      });
+      // Launch guided review walkthrough instead of going straight to chat
+      setShowGuidedReview(true);
     } catch (error) {
       console.error("Error saving/polishing profile:", error);
       // Fallback to saving raw data if polishing fails
       setProfileData(editedData);
       setShowEditForm(false);
-      addMessage({
-        text: "I've saved your information. Let's get started on refining it further. What would you like to work on first?",
-        sender: 'bot',
-      });
+      setShowGuidedReview(true);
     } finally {
       setIsPolishing(false);
     }
+  };
+
+  const handleGuidedReviewComplete = () => {
+    setShowGuidedReview(false);
+    addMessage({
+      text: `Great, your profile is looking solid! I can see your experience as ${profileData.professionalTitle || 'a professional'}. Let me help you refine this into a powerful professional profile.\n\nWhat would you like to work on first?`,
+      sender: 'bot',
+      suggestedReplies: [
+        "Help me write my About Me",
+        "Let's craft my personal story",
+        "Explain my expertise areas",
+      ],
+    });
   };
 
   const sendMessage = async (text?: string) => {
@@ -668,6 +675,17 @@ export default function Home() {
         />
       )}
 
+      {/* Guided Review Overlay */}
+      {showGuidedReview && (
+        <GuidedReviewOverlay
+          profileData={profileData}
+          onUpdateField={updateProfileField}
+          onMerge={mergeProfileData}
+          onComplete={handleGuidedReviewComplete}
+          previewContainerId="printableArea"
+        />
+      )}
+
       {/* Auth Modal */}
       {showAuthModal && <AuthModal />}
 
@@ -684,22 +702,31 @@ export default function Home() {
             <span className="text-xs font-medium text-slate-500">A4 Document • Portrait</span>
           </div>
 
-          <button
-            onClick={downloadPDF}
-            className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
-          >
-            {!downloading ? (
-              <>
-                <span>Export PDF</span>
-                <Download className="w-3.5 h-3.5" />
-              </>
-            ) : (
-              <>
-                <span>Processing</span>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowGuidedReview(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>Edit</span>
+            </button>
+            <button
+              onClick={downloadPDF}
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
+            >
+              {!downloading ? (
+                <>
+                  <span>Export PDF</span>
+                  <Download className="w-3.5 h-3.5" />
+                </>
+              ) : (
+                <>
+                  <span>Processing</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-10 md:p-16 relative" id="docScrollArea">
