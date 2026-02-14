@@ -16,7 +16,8 @@ import {
     Trash2,
     Sparkles,
     Loader2,
-    MessageSquare
+    MessageSquare,
+    Lightbulb
 } from 'lucide-react';
 import { ProfileData } from '../lib/schema';
 import { enhanceProfileSection } from '../lib/groq';
@@ -214,40 +215,8 @@ export default function GuidedReviewOverlay({
     const navDebounceRef = useRef(false);
     const rafRef = useRef<number>(0);
 
-    // Draggable state
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const dragStartRef = useRef({ x: 0, y: 0 });
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        setIsDragging(true);
-        dragStartRef.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y
-        };
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            setPosition({
-                x: e.clientX - dragStartRef.current.x,
-                y: e.clientY - dragStartRef.current.y
-            });
-        };
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
+    // Collapsible guidance state
+    const [showGuidance, setShowGuidance] = useState(false);
 
     const section = REVIEW_SECTIONS[currentStep];
     const totalSteps = REVIEW_SECTIONS.length;
@@ -898,7 +867,7 @@ export default function GuidedReviewOverlay({
     const overlayContent = (
         <>
             {/* 
-                Single persistent spotlight element. 
+                Single persistent spotlight element — pointerEvents: none so preview stays interactive
             */}
             <div
                 className="guided-highlight-ring"
@@ -910,226 +879,197 @@ export default function GuidedReviewOverlay({
                     height: highlightRect?.height ?? '100vh',
                     borderRadius: highlightRect ? 14 : 0,
                     boxShadow: highlightRect
-                        ? '0 0 0 9999px rgba(15, 23, 42, 0.4), 0 0 30px rgba(1, 51, 76, 0.15)'
-                        : '0 0 0 0 rgba(15, 23, 42, 0.4)',
-                    opacity: highlightVisible && highlightRect ? 1 : highlightRect ? 0.3 : 0.8,
+                        ? '0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 30px rgba(1, 51, 76, 0.15)'
+                        : '0 0 0 0 rgba(15, 23, 42, 0.25)',
+                    opacity: highlightVisible && highlightRect ? 1 : highlightRect ? 0.3 : 0.6,
                     zIndex: 9998,
                     pointerEvents: 'none',
                     transition: 'top 0.5s cubic-bezier(0.4,0,0.2,1), left 0.5s cubic-bezier(0.4,0,0.2,1), width 0.5s cubic-bezier(0.4,0,0.2,1), height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, border-radius 0.4s ease',
                 }}
             />
 
-            {/* Click blocker */}
+            {/* Right-docked sliding panel */}
             <div
+                key={cardKey}
+                className={`fixed top-0 right-0 h-full w-[460px] bg-white shadow-2xl shadow-slate-900/30 border-l border-slate-200 flex flex-col z-[9999] ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'
+                    }`}
                 style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 9999,
-                    pointerEvents: 'all',
-                    background: 'transparent',
-                    cursor: 'default',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    animation: 'guided-panel-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* 
-                   Full Size Floating Card (Center Aligned, 900px) 
-                   Added key to re-trigger animation on section change
-                */}
-                <div
-                    key={cardKey}
-                    className={`bg-white rounded-3xl shadow-2xl shadow-slate-900/40 border border-slate-200 overflow-hidden w-full max-w-[900px] h-[600px] flex flex-col mx-4 ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
-                    style={{
-                        transform: `translate(${position.x}px, ${position.y}px)`,
-                        transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                >
 
-                    {/* Header */}
-                    <div
-                        className="bg-gradient-to-r from-[#01334c] to-[#024466] px-8 py-5 flex-shrink-0 flex items-center justify-between cursor-move select-none"
-                        onMouseDown={handleMouseDown}
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                                <Linkedin className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white tracking-tight">{section.label}</h3>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-white/60 font-medium">Step {currentStep + 1} of {totalSteps}</span>
-                                    <div className="flex items-center gap-1">
-                                        {REVIEW_SECTIONS.map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className={`w-1.5 h-1.5 rounded-full ${i === currentStep ? 'bg-white' : 'bg-white/20'}`}
-                                            />
-                                        ))}
-                                    </div>
+                {/* Header */}
+                <div className="bg-gradient-to-r from-[#01334c] to-[#024466] px-6 py-4 flex-shrink-0 flex items-center justify-between select-none">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                            <Linkedin className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-base font-bold text-white tracking-tight">{section.label}</h3>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-white/60 font-medium">Step {currentStep + 1} of {totalSteps}</span>
+                                <div className="flex items-center gap-0.5">
+                                    {REVIEW_SECTIONS.map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className={`w-1.5 h-1.5 rounded-full transition-colors ${i === currentStep ? 'bg-white' : i < currentStep ? 'bg-white/40' : 'bg-white/15'}`}
+                                        />
+                                    ))}
                                 </div>
                             </div>
                         </div>
+                    </div>
 
+                    <button
+                        onClick={handleSkipAll}
+                        className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all"
+                        title="Close"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Description bar */}
+                <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex-shrink-0">
+                    <p className="text-xs text-slate-600 leading-relaxed">{section.description}</p>
+                </div>
+
+                {/* Collapsible Guidance */}
+                <div className="flex-shrink-0 border-b border-slate-100">
+                    <button
+                        onClick={() => setShowGuidance(!showGuidance)}
+                        className="w-full px-6 py-2.5 flex items-center gap-2 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50/60 hover:bg-amber-50 transition-colors"
+                    >
+                        <Lightbulb className="w-3 h-3" />
+                        <span>Expert Tips & Examples</span>
+                        <ChevronDown className={`w-3 h-3 ml-auto transition-transform ${showGuidance ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showGuidance && (
+                        <div className="px-6 py-4 bg-amber-50/30 space-y-4 animate-fade-in-up">
+                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                                <p className="text-xs text-slate-600 leading-relaxed mb-3">{section.guidance}</p>
+                                <div className="space-y-1.5">
+                                    {section.tips.map((tip, i) => (
+                                        <div key={i} className="flex items-start gap-2 text-[11px] text-slate-500">
+                                            <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
+                                            <span>{tip}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {section.examples && section.examples.length > 0 && (
+                                <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 space-y-1.5">
+                                    <h4 className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2">Examples</h4>
+                                    {section.examples.map((ex, i) => (
+                                        <p key={i} className="text-[11px] text-emerald-800/80 italic border-l-2 border-emerald-300 pl-2.5 py-0.5">
+                                            "{ex}"
+                                        </p>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Scrollable edit content */}
+                <div ref={cardBodyRef} className="flex-1 overflow-y-auto px-6 py-5">
+
+                    {/* AI Suggestion Overlay */}
+                    {aiSuggestion && (
+                        <div className="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4 animate-fade-in-up shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-violet-900">AI Enhancement Ready</h4>
+                                    <p className="text-[10px] text-violet-600">Review the suggested improvements</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5 mb-3 bg-white/60 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar border border-violet-100/50">
+                                {Object.entries(aiSuggestion).map(([key, value]) => (
+                                    <div key={key} className="text-[11px] text-slate-700">
+                                        <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-1.5">{key}:</span>
+                                        <span className="leading-relaxed">{typeof value === 'string' ? value : Array.isArray(value) ? value.join(', ') : JSON.stringify(value)}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        onMerge(aiSuggestion);
+                                        setAiSuggestion(null);
+                                    }}
+                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
+                                >
+                                    <Check className="w-3 h-3" /> Accept & Use
+                                </button>
+                                <button
+                                    onClick={() => setAiSuggestion(null)}
+                                    className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
+                                >
+                                    Discard
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Main Input Fields */}
+                    {renderEditFields()}
+                </div>
+
+                {/* Footer Actions */}
+                <div className="bg-slate-50 border-t border-slate-100 px-5 py-3 flex-shrink-0 space-y-3">
+                    {/* AI Controls */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            value={userInstructions}
+                            onChange={(e) => setUserInstructions(e.target.value)}
+                            placeholder="AI Instructions (e.g., make it more punchy)..."
+                            className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 outline-none transition-all placeholder-slate-400"
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleEnhance(); }}
+                        />
                         <button
-                            onClick={handleSkipAll}
-                            className="text-xs text-white/50 hover:text-white font-medium transition-colors flex items-center gap-1"
+                            onClick={handleEnhance}
+                            disabled={isEnhancing}
+                            className="px-3 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-md shadow-violet-200 hover:shadow-violet-300 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-wait whitespace-nowrap"
                         >
-                            <SkipForward className="w-3.5 h-3.5" />
-                            Skip All
+                            {isEnhancing ? (
+                                <><Loader2 className="w-3 h-3 animate-spin" /> Enhancing</>
+                            ) : (
+                                <><Sparkles className="w-3 h-3" /> Enhance</>
+                            )}
                         </button>
                     </div>
 
-                    {/* Main Content Areas (Grid) */}
-                    <div className="flex-1 flex overflow-hidden">
-
-                        {/* LEFT COLUMN: Guidance & Context (40%) */}
-                        <div className="w-[40%] bg-slate-50/80 border-r border-slate-100 p-8 overflow-y-auto">
-                            <div className="sticky top-0 space-y-6">
-                                <div>
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider border border-amber-200 mb-3">
-                                        <Sparkles className="w-3 h-3" />
-                                        Expert Guidance
-                                    </span>
-                                    <p className="text-slate-700 font-medium leading-relaxed">
-                                        {section.description}
-                                    </p>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">What goes here?</h4>
-                                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-                                        <p className="text-sm text-slate-600 leading-relaxed mb-4">{section.guidance}</p>
-
-                                        <div className="space-y-2">
-                                            {section.tips.map((tip, i) => (
-                                                <div key={i} className="flex items-start gap-2 text-xs text-slate-500">
-                                                    <span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                                    <span>{tip}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {section.examples && section.examples.length > 0 && (
-                                    <div className="space-y-3">
-                                        <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Great Examples</h4>
-                                        <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 space-y-2">
-                                            {section.examples.map((ex, i) => (
-                                                <p key={i} className="text-xs text-emerald-800/80 italic border-l-2 border-emerald-300 pl-3 py-0.5">
-                                                    "{ex}"
-                                                </p>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* RIGHT COLUMN: Edit & Enhance (60%) */}
-                        <div className="flex-1 bg-white p-8 overflow-y-auto relative flex flex-col">
-
-                            {/* AI Suggestion Overlay */}
-                            {aiSuggestion && (
-                                <div className="mb-6 bg-violet-50 border border-violet-100 rounded-2xl p-5 animate-fade-in-up shadow-sm">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
-                                            <Sparkles className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-bold text-violet-900">AI Enhancement Ready</h4>
-                                            <p className="text-xs text-violet-600">Review the suggested improvements below</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2 mb-4 bg-white/60 rounded-xl p-3 max-h-48 overflow-y-auto custom-scrollbar border border-violet-100/50">
-                                        {Object.entries(aiSuggestion).map(([key, value]) => (
-                                            <div key={key} className="text-xs text-slate-700">
-                                                <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-2">{key}:</span>
-                                                <span className="leading-relaxed">{typeof value === 'string' ? value : Array.isArray(value) ? value.join(', ') : JSON.stringify(value)}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => {
-                                                onMerge(aiSuggestion);
-                                                setAiSuggestion(null);
-                                            }}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
-                                        >
-                                            <Check className="w-3.5 h-3.5" /> Accept & Use
-                                        </button>
-                                        <button
-                                            onClick={() => setAiSuggestion(null)}
-                                            className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
-                                        >
-                                            Discard
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Main Input Fields */}
-                            <div className="flex-1">
-                                {renderEditFields()}
-                            </div>
-
-                            {/* AI Action Area - Moved to Footer */}
-
-                        </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="bg-slate-50 border-t border-slate-100 px-8 py-4 flex items-center justify-between flex-shrink-0 gap-4">
+                    {/* Navigation */}
+                    <div className="flex items-center justify-between gap-3">
                         <button
                             onClick={goPrev}
                             disabled={currentStep === 0}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors bg-white border border-slate-200 shadow-sm ${currentStep === 0 ? 'text-slate-300 cursor-not-allowed opacity-50' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                            className={`flex items-center gap-1 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors bg-white border border-slate-200 shadow-sm ${currentStep === 0 ? 'text-slate-300 cursor-not-allowed opacity-50' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                         >
-                            <ChevronLeft className="w-4 h-4" /> Back
+                            <ChevronLeft className="w-3.5 h-3.5" /> Back
                         </button>
-
-                        {/* Centered AI Controls */}
-                        <div className="flex-1 flex items-center gap-2 max-w-lg">
-                            <input
-                                type="text"
-                                value={userInstructions}
-                                onChange={(e) => setUserInstructions(e.target.value)}
-                                placeholder="AI Instructions..."
-                                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 outline-none transition-all placeholder-slate-400"
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleEnhance(); }}
-                            />
-                            <button
-                                onClick={handleEnhance}
-                                disabled={isEnhancing}
-                                className="px-3 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-md shadow-violet-200 hover:shadow-violet-300 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-wait whitespace-nowrap"
-                            >
-                                {isEnhancing ? (
-                                    <><Loader2 className="w-3 h-3 animate-spin" /> Enhancing</>
-                                ) : (
-                                    <><Sparkles className="w-3 h-3" /> Enhance</>
-                                )}
-                            </button>
-                        </div>
 
                         <button
                             onClick={goNext}
-                            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#01334c] text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-[#01334c]/20 hover:bg-[#024466] hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+                            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#01334c] text-white text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-[#01334c]/20 hover:bg-[#024466] hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
                         >
                             {currentStep === totalSteps - 1 ? (
-                                <><Check className="w-4 h-4" /> Finish</>
+                                <><Check className="w-3.5 h-3.5" /> Finish</>
                             ) : (
-                                <>Next <ChevronRight className="w-4 h-4" /></>
+                                <>Next <ChevronRight className="w-3.5 h-3.5" /></>
                             )}
                         </button>
                     </div>
-
                 </div>
+
             </div>
         </>
     );

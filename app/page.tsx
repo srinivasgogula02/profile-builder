@@ -16,6 +16,7 @@ import {
   Sparkles,
   LogOut,
   Pencil,
+  MessageCircle,
 } from 'lucide-react';
 import { renderProfile } from './lib/default-content';
 import { useProfileStore } from './lib/store';
@@ -505,7 +506,7 @@ export default function Home() {
       )}
 
       {/* Sidebar / Chat Interface */}
-      <aside className="w-[420px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white relative z-20 shadow-xl shadow-slate-200/50">
+      <aside className={`w-[420px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white relative z-20 shadow-xl shadow-slate-200/50 transition-all duration-300 ${showGuidedReview ? 'hidden' : ''}`}>
 
         {/* Chat Header */}
         <div className="h-20 flex items-center px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
@@ -705,11 +706,33 @@ export default function Home() {
         />
       )}
 
+      {/* Floating Chat FAB — visible when guided panel hides the chatbot */}
+      {showGuidedReview && (
+        <button
+          onClick={() => setShowGuidedReview(false)}
+          className="fixed bottom-6 left-6 z-[10000] group"
+          title="Switch to AI Chat"
+        >
+          <div className="relative">
+            {/* Pulsing ring */}
+            <div className="absolute inset-0 rounded-full bg-[#01334c]/20 animate-ping" style={{ animationDuration: '2s' }} />
+            {/* Button */}
+            <div className="relative w-14 h-14 rounded-full bg-[#01334c] shadow-xl shadow-[#01334c]/30 flex items-center justify-center text-white hover:bg-[#024466] hover:scale-110 active:scale-95 transition-all duration-200 ring-4 ring-white">
+              <MessageCircle className="w-6 h-6" />
+            </div>
+            {/* Tooltip */}
+            <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-medium px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-lg">
+              Switch to AI Chat
+              <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900" />
+            </div>
+          </div>
+        </button>
+      )}
       {/* Auth Modal */}
       {showAuthModal && <AuthModal />}
 
       {/* Main Preview Area */}
-      <main className="flex-1 flex flex-col bg-slate-50/50 relative h-full">
+      <main className={`flex-1 flex flex-col bg-slate-50/50 relative h-full transition-all duration-300 ${showGuidedReview ? 'pr-[460px]' : ''}`}>
 
         <div className="h-20 flex-shrink-0 flex items-center justify-between px-8 border-b border-slate-200/60 bg-white/80 backdrop-blur z-30">
           <div className="flex items-center gap-6">
