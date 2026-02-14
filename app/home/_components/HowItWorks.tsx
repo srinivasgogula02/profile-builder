@@ -150,7 +150,7 @@ export default function HowItWorks() {
                     }}
                 >
                     <Link
-                        href="/"
+                        href="/chat"
                         className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-[15px] font-bold bg-[#03334c] text-white hover:bg-[#02283b] transition-all hover:scale-[1.03] active:scale-[0.97] shadow-xl shadow-[#03334c]/15 hover:shadow-[#03334c]/25"
                     >
                         Start Building Now

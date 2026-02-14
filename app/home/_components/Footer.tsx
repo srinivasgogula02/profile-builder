@@ -58,7 +58,7 @@ export default function Footer() {
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                                 <Link
-                                    href="/"
+                                    href="/chat"
                                     className="group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-[15px] font-bold bg-white text-[#03334c] hover:bg-blue-50 transition-all hover:scale-[1.03] active:scale-[0.97] shadow-xl"
                                 >
                                     Get Started Free

@@ -48,7 +48,7 @@ export default function Hero() {
                 }`}>
                 <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-[72px]">
                     {/* Logo */}
-                    <Link href="/home" className="flex items-center gap-2.5 group">
+                    <Link href="/" className="flex items-center gap-2.5 group">
                         <Image src="/logo.png" alt="OnEasy" width={120} height={40} className="h-9 w-auto" priority />
                         <span className="text-xl font-bold tracking-tight text-[#03334c]">
                             ProfileBuilder
@@ -76,13 +76,13 @@ export default function Hero() {
                     {/* Desktop CTA */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link
-                            href="/"
+                            href="/chat"
                             className="px-5 py-2 text-[13px] font-semibold text-slate-500 hover:text-[#03334c] transition-colors"
                         >
                             Sign In
                         </Link>
                         <Link
-                            href="/"
+                            href="/chat"
                             className="px-5 py-2.5 rounded-xl text-[13px] font-semibold bg-[#03334c] text-white hover:bg-[#02283b] shadow-lg shadow-[#03334c]/15 hover:shadow-[#03334c]/25 transition-all hover:scale-[1.03] active:scale-[0.97] flex items-center gap-2"
                         >
                             Build Profile <ArrowRight className="w-3.5 h-3.5" />
@@ -113,8 +113,8 @@ export default function Hero() {
                                 </a>
                             ))}
                             <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-                                <Link href="/" className="px-4 py-3 text-sm font-semibold text-slate-600 hover:text-[#03334c]">Sign In</Link>
-                                <Link href="/" className="px-4 py-3 text-sm font-semibold bg-[#03334c] text-white rounded-xl text-center">Build Profile</Link>
+                                <Link href="/chat" className="px-4 py-3 text-sm font-semibold text-slate-600 hover:text-[#03334c]">Sign In</Link>
+                                <Link href="/chat" className="px-4 py-3 text-sm font-semibold bg-[#03334c] text-white rounded-xl text-center">Build Profile</Link>
                             </div>
                         </div>
                     </div>
@@ -154,7 +154,7 @@ export default function Hero() {
                     {/* CTAs */}
                     <div className="flex flex-col sm:flex-row gap-4 pt-2">
                         <Link
-                            href="/"
+                            href="/chat"
                             className="group px-8 py-4 rounded-2xl text-[15px] font-bold bg-[#03334c] text-white hover:bg-[#02283b] transition-all hover:scale-[1.03] active:scale-[0.97] shadow-xl shadow-[#03334c]/15 hover:shadow-[#03334c]/25 flex items-center justify-center gap-2.5"
                         >
                             Start for Free
