@@ -159,6 +159,70 @@ ${JSON.stringify(linkedInJson)}
 
 Return ONLY a valid JSON object. No markdown wrapping, no explanations.`;
 
+    // ── Deterministic extraction of critical fields from raw scraper JSON ──
+    // These fields are too important to leave to AI interpretation (long URLs get truncated)
+    const deterministic: Partial<ProfileData> = {};
+    try {
+        const raw = linkedInJson as Record<string, unknown>;
+        // The scraper wraps data in { success, data: [ profile ] }
+        const profile = Array.isArray(raw.data) ? (raw.data[0] as Record<string, unknown>) : raw;
+
+        // Profile photo — extract the highest-res version
+        const pictureUrl = (profile.pictureUrl || profile.profile_pic_url || profile.profilePicUrl || '') as string;
+        if (pictureUrl && typeof pictureUrl === 'string' && pictureUrl.startsWith('http')) {
+            // Try to get a higher-res version by adjusting the LinkedIn URL
+            const highRes = pictureUrl
+                .replace(/scale_100_100/, 'scale_400_400')
+                .replace(/scale_200_200/, 'scale_400_400');
+            deterministic.profilePhoto = highRes;
+        }
+
+        // LinkedIn URL — construct from publicIdentifier if available
+        const publicId = (profile.publicIdentifier || profile.public_id || '') as string;
+        if (publicId) {
+            deterministic.socialLinks = {
+                ...(deterministic.socialLinks || {}),
+                linkedin: `https://www.linkedin.com/in/${publicId}/`,
+            };
+        }
+
+        // YouTube — extract from creatorInfo if available
+        const creatorInfo = profile.creatorInfo as Record<string, unknown> | undefined;
+        if (creatorInfo?.website) {
+            const website = creatorInfo.website as Record<string, unknown>;
+            const attrs = website.attributesV2 as Array<Record<string, unknown>> | undefined;
+            if (attrs) {
+                for (const attr of attrs) {
+                    const detail = attr.detailData as Record<string, unknown> | undefined;
+                    if (detail?.hyperlink && typeof detail.hyperlink === 'string') {
+                        if (detail.hyperlink.includes('youtube.com')) {
+                            deterministic.socialLinks = {
+                                ...(deterministic.socialLinks || {}),
+                                youtube: detail.hyperlink,
+                            };
+                        } else if (!detail.hyperlink.includes('linkedin.com')) {
+                            deterministic.socialLinks = {
+                                ...(deterministic.socialLinks || {}),
+                                website: detail.hyperlink,
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        // Company website from current company
+        const companyUrl = (profile.companyLinkedinUrl || '') as string;
+        if (companyUrl) {
+            deterministic.socialLinks = {
+                ...(deterministic.socialLinks || {}),
+                companyWebsite: companyUrl,
+            };
+        }
+    } catch (e) {
+        console.warn('Deterministic field extraction had an issue:', e);
+    }
+
     try {
         const result = streamText({
             model: getModel(),
@@ -173,25 +237,46 @@ Return ONLY a valid JSON object. No markdown wrapping, no explanations.`;
                 parsed = JSON.parse(cleanText);
             } catch {
                 console.error('AI returned invalid JSON for LinkedIn extraction');
-                return {};
+                return deterministic; // At least return deterministic fields
             }
             // Validate against schema — strip unknown fields, coerce types
             const validated = ProfileSchema.partial().safeParse(parsed);
+            let aiData: Partial<ProfileData> = {};
             if (validated.success) {
-                return validated.data;
+                aiData = validated.data;
+            } else {
+                console.warn('AI LinkedIn data failed schema validation:', validated.error.issues);
+                // Fallback: return raw parse but strip __proto__ for safety
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    delete (parsed as Record<string, unknown>)['__proto__'];
+                    delete (parsed as Record<string, unknown>)['constructor'];
+                    aiData = parsed as Partial<ProfileData>;
+                }
             }
-            console.warn('AI LinkedIn data failed schema validation:', validated.error.issues);
-            // Fallback: return raw parse but strip __proto__ for safety
-            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                delete (parsed as Record<string, unknown>)['__proto__'];
-                delete (parsed as Record<string, unknown>)['constructor'];
-                return parsed as Partial<ProfileData>;
+
+            // Merge: AI data first, then deterministic fields override where they exist
+            // This ensures the AI's creative work is kept, but critical URLs are guaranteed
+            const merged = { ...aiData };
+
+            // Profile photo: prefer deterministic extraction (AI often truncates long URLs)
+            if (deterministic.profilePhoto) {
+                merged.profilePhoto = deterministic.profilePhoto;
             }
+
+            // Social links: merge deterministic into AI's, preserving AI-found links
+            if (deterministic.socialLinks) {
+                merged.socialLinks = {
+                    ...(aiData.socialLinks || {}),
+                    ...deterministic.socialLinks,
+                };
+            }
+
+            return merged;
         }
     } catch (error) {
         console.error('Error extracting LinkedIn profile:', error);
     }
-    return {};
+    return deterministic; // Return at least deterministic fields if AI fails entirely
 };
 
 // ─── Profile Data Polishing ──────────────────────────────────────────────────
