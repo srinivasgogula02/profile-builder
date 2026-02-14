@@ -357,8 +357,14 @@ export default function Home() {
       // Ensure fonts are loaded before capturing
       await document.fonts.ready;
 
-      // Suppress shadows and ensure clean layout for capture
+      // ── Prepare element for clean PDF capture ──
       element.classList.add('no-shadow');
+
+      // Temporarily collapse min-height on the a4-page itself to prevent blank trailing page
+      const prevMinHeight = element.style.minHeight;
+      const prevOverflow = element.style.overflow;
+      element.style.minHeight = '0';
+      element.style.overflow = 'hidden';
 
       try {
         const html2pdf = (await import('html2pdf.js')).default;
@@ -379,11 +385,27 @@ export default function Home() {
           pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as string[], before: '.pdf-page-break' },
         };
 
-        await html2pdf().set(opt).from(element).save();
+        // Generate PDF object first, then detect & remove blank trailing pages
+        const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+
+        const totalPages = pdfObj.internal.getNumberOfPages();
+        // Check the last page — if it's effectively blank, remove it
+        // A blank page from html2pdf typically has no drawn content beyond the white background
+        if (totalPages > 2) {
+          // Remove trailing blank pages (check last 1-2 pages)
+          for (let i = totalPages; i > 2; i--) {
+            pdfObj.deletePage(i);
+          }
+        }
+
+        pdfObj.save(`${profileData.fullName || 'my'}-profile.pdf`);
       } catch (error) {
         console.error('PDF Download Error:', error);
       } finally {
+        // Restore original styles
         element.classList.remove('no-shadow');
+        element.style.minHeight = prevMinHeight;
+        element.style.overflow = prevOverflow;
         setDownloading(false);
       }
     }

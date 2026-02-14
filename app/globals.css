@@ -159,6 +159,21 @@
     box-shadow: none !important;
 }
 
+/* During PDF capture: collapse extra space that causes blank trailing pages */
+.no-shadow.a4-page,
+.no-shadow .a4-page {
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.no-shadow .content-wrapper {
+    padding-bottom: 20px !important;
+}
+
+.no-shadow .content-wrapper>*:last-child {
+    margin-bottom: 0 !important;
+}
+
 .page * {
     box-sizing: border-box;
     -webkit-print-color-adjust: exact;
