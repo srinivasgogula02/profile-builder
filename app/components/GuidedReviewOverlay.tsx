@@ -394,6 +394,81 @@ export default function GuidedReviewOverlay({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep]);
 
+    // ── Click-to-navigate (Event Delegation) ────────────────────────────────
+    useEffect(() => {
+        const container = document.getElementById(previewContainerId);
+        if (!container) return;
+
+        // 1. Inject styles for pointer cursor on hover
+        // We do this via style tag because the elements inside container are re-created
+        // whenever data changes (dangerouslySetInnerHTML), so direct style manipulation is lost.
+        const styleId = 'guided-review-cursor-styles';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                #${previewContainerId} .header-container,
+                #${previewContainerId} .prompt-box,
+                #${previewContainerId} .roles-section,
+                #${previewContainerId} .brands-section,
+                #${previewContainerId} .impact-section,
+                #${previewContainerId} .awards-section,
+                #${previewContainerId} .social-links,
+                #${previewContainerId} .contact-section {
+                    cursor: pointer !important;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                #${previewContainerId} .header-container:hover,
+                #${previewContainerId} .prompt-box:hover,
+                #${previewContainerId} .roles-section:hover,
+                #${previewContainerId} .brands-section:hover,
+                #${previewContainerId} .impact-section:hover,
+                #${previewContainerId} .awards-section:hover,
+                #${previewContainerId} .social-links:hover,
+                #${previewContainerId} .contact-section:hover {
+                    box-shadow: 0 0 0 2px rgba(1, 51, 76, 0.1);
+                    border-radius: 4px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 2. Event Delegation Handler
+        const clickHandler = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+
+            // Find which section matched
+            const matchedSectionIndex = REVIEW_SECTIONS.findIndex(sec => {
+                return target.closest(sec.selector);
+            });
+
+            if (matchedSectionIndex !== -1 && matchedSectionIndex !== currentStep) {
+                e.stopPropagation();
+
+                // Apply pending edits before navigating
+                if (Object.keys(localEdits).length > 0) {
+                    onMerge(localEdits);
+                    setLocalEdits({});
+                }
+
+                setIsTransitioning(true);
+                // navigate
+                setTimeout(() => {
+                    setCurrentStep(matchedSectionIndex);
+                    setIsTransitioning(false);
+                }, 300);
+            }
+        };
+
+        container.addEventListener('click', clickHandler);
+        return () => {
+            container.removeEventListener('click', clickHandler);
+            // Cleanup styles when component unmounts
+            const styleEl = document.getElementById(styleId);
+            if (styleEl) styleEl.remove();
+        };
+    }, [currentStep, previewContainerId, localEdits, onMerge]);
+
     // ── Navigation ──────────────────────────────────────────────────────────
     const goNext = useCallback(() => {
         if (navDebounceRef.current) return;
