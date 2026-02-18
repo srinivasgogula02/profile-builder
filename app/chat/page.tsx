@@ -80,6 +80,7 @@ export default function Home() {
   const [tempProfileData, setTempProfileData] =
     useState<Partial<ProfileData> | null>(null);
   const [isPolishing, setIsPolishing] = useState(false);
+  const [showProcessingDialog, setShowProcessingDialog] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -262,8 +263,8 @@ export default function Home() {
         setScrapeStatus("error");
         setScrapeMessage(
           data?.detail ||
-            data?.message ||
-            `Request failed with status ${res.status}`,
+          data?.message ||
+          `Request failed with status ${res.status}`,
         );
       }
     } catch {
@@ -275,6 +276,7 @@ export default function Home() {
   };
 
   const handleSaveEdit = async (editedData: Partial<ProfileData>) => {
+    setShowProcessingDialog(true);
     setIsPolishing(true);
     try {
       // Polish the data with AI before saving
@@ -460,9 +462,9 @@ export default function Home() {
   const overallProgress =
     SECTIONS.length > 0
       ? Math.round(
-          SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) /
-            SECTIONS.length,
-        )
+        SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) /
+        SECTIONS.length,
+      )
       : 0;
 
   // Get last bot message suggested replies
@@ -531,15 +533,15 @@ export default function Home() {
 
               {(scrapeStatus === "success" ||
                 scrapeStatus === "processing") && (
-                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
-                  {scrapeStatus === "processing" ? (
-                    <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  )}
-                  <span className="font-medium">{scrapeMessage}</span>
-                </div>
-              )}
+                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
+                    {scrapeStatus === "processing" ? (
+                      <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    <span className="font-medium">{scrapeMessage}</span>
+                  </div>
+                )}
 
               {/* Actions */}
               <div className="space-y-3 pt-1">
@@ -587,7 +589,7 @@ export default function Home() {
                     doSkip();
                   }}
                   disabled={scrapeStatus === "loading"}
-                  className="w-full py-2.5 rounded-xl text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50"
                 >
                   Skip — I&apos;ll build from scratch
                 </button>
@@ -686,14 +688,13 @@ export default function Home() {
                 <div
                   key={section.id}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all duration-300 cursor-default flex items-center gap-1
-                    ${
-                      isComplete
-                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                        : isActive
-                          ? "bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20"
-                          : progress > 0
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-slate-100 text-slate-400 border border-slate-200"
+                    ${isComplete
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      : isActive
+                        ? "bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20"
+                        : progress > 0
+                          ? "bg-amber-50 text-amber-700 border border-amber-200"
+                          : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   title={`${section.label}: ${progress}%`}
                 >
@@ -717,11 +718,10 @@ export default function Home() {
               className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
             >
               <div
-                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${
-                  msg.sender === "user"
+                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${msg.sender === "user"
                     ? "bg-[#01334c] ring-4 ring-[#01334c]/10"
                     : "bg-slate-50 border border-slate-100"
-                }`}
+                  }`}
               >
                 {msg.sender === "user" ? (
                   <User className="w-4 h-4 text-white" />
@@ -731,11 +731,10 @@ export default function Home() {
               </div>
               <div className="space-y-2 max-w-[290px]">
                 <div
-                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${
-                    msg.sender === "user"
+                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${msg.sender === "user"
                       ? "bg-[#01334c] text-white rounded-tr-none shadow-[#01334c]/20"
                       : "bg-slate-50 border border-slate-100 text-slate-600 rounded-tl-none"
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
@@ -853,6 +852,57 @@ export default function Home() {
       )}
       {/* Auth Modal */}
       {showAuthModal && <AuthModal />}
+
+      {/* Polishing / Loading Dialog */}
+      {/* Polishing / Loading Dialog */}
+      {showProcessingDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl p-10 max-w-sm w-full mx-4 text-center shadow-2xl animate-scale-in border border-slate-100/50">
+            <div className="w-20 h-20 bg-[#01334c]/5 rounded-full flex items-center justify-center mx-auto mb-6 relative group">
+              {isPolishing ? (
+                <>
+                  <div className="absolute inset-0 rounded-full border-4 border-[#01334c]/10"></div>
+                  <div
+                    className="absolute inset-0 rounded-full border-4 border-t-[#01334c] border-r-transparent border-b-transparent border-l-transparent animate-spin"
+                    style={{ animationDuration: "1s" }}
+                  ></div>
+                  <Sparkles className="w-8 h-8 text-[#01334c] animate-pulse" />
+                </>
+              ) : (
+                <div className="w-full h-full rounded-full bg-emerald-100 flex items-center justify-center animate-scale-in">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                </div>
+              )}
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">
+              {isPolishing ? "Analyzing Profile..." : "Analysis Complete!"}
+            </h3>
+
+            <p className="text-slate-500 text-sm leading-relaxed mb-8 px-2 font-medium">
+              It only takes 60 seconds to check your data we got from you linkedin and add any missing feilds
+            </p>
+
+            <button
+              onClick={() => setShowProcessingDialog(false)}
+              disabled={isPolishing}
+              className="w-full py-4 rounded-2xl bg-[#01334c] hover:bg-[#024466] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-[#01334c]/20 hover:shadow-[#01334c]/40 hover:translate-y-[-2px] active:translate-y-[0px] flex items-center justify-center gap-2 group"
+            >
+              {isPolishing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin opacity-70" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Proceed to Review</span>
+                  <ArrowUp className="w-4 h-4 rotate-90 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Preview Area */}
       <main
