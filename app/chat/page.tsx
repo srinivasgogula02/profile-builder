@@ -80,6 +80,7 @@ export default function Home() {
   const [tempProfileData, setTempProfileData] =
     useState<Partial<ProfileData> | null>(null);
   const [isPolishing, setIsPolishing] = useState(false);
+  const [showProcessingDialog, setShowProcessingDialog] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -275,6 +276,7 @@ export default function Home() {
   };
 
   const handleSaveEdit = async (editedData: Partial<ProfileData>) => {
+    setShowProcessingDialog(true);
     setIsPolishing(true);
     try {
       // Polish the data with AI before saving
@@ -850,6 +852,57 @@ export default function Home() {
       )}
       {/* Auth Modal */}
       {showAuthModal && <AuthModal />}
+
+      {/* Polishing / Loading Dialog */}
+      {/* Polishing / Loading Dialog */}
+      {showProcessingDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl p-10 max-w-sm w-full mx-4 text-center shadow-2xl animate-scale-in border border-slate-100/50">
+            <div className="w-20 h-20 bg-[#01334c]/5 rounded-full flex items-center justify-center mx-auto mb-6 relative group">
+              {isPolishing ? (
+                <>
+                  <div className="absolute inset-0 rounded-full border-4 border-[#01334c]/10"></div>
+                  <div
+                    className="absolute inset-0 rounded-full border-4 border-t-[#01334c] border-r-transparent border-b-transparent border-l-transparent animate-spin"
+                    style={{ animationDuration: "1s" }}
+                  ></div>
+                  <Sparkles className="w-8 h-8 text-[#01334c] animate-pulse" />
+                </>
+              ) : (
+                <div className="w-full h-full rounded-full bg-emerald-100 flex items-center justify-center animate-scale-in">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                </div>
+              )}
+            </div>
+
+            <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">
+              {isPolishing ? "Analyzing Profile..." : "Analysis Complete!"}
+            </h3>
+
+            <p className="text-slate-500 text-sm leading-relaxed mb-8 px-2 font-medium">
+              It only takes 60 seconds to check your data we got from you linkedin and add any missing feilds
+            </p>
+
+            <button
+              onClick={() => setShowProcessingDialog(false)}
+              disabled={isPolishing}
+              className="w-full py-4 rounded-2xl bg-[#01334c] hover:bg-[#024466] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-[#01334c]/20 hover:shadow-[#01334c]/40 hover:translate-y-[-2px] active:translate-y-[0px] flex items-center justify-center gap-2 group"
+            >
+              {isPolishing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin opacity-70" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Proceed to Review</span>
+                  <ArrowUp className="w-4 h-4 rotate-90 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Preview Area */}
       <main
