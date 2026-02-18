@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Business Profile</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Open+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* CSS STYLES */
+      :root {
+        --primary-yellow: #ffc800; /* Adjust to match the mustard yellow */
+        --primary-blue: #0e4c8a; /* The deep blue text color */
+        --text-dark: #1a1a1a;
+        --text-grey: #444444;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: "Open Sans", sans-serif;
+      }
+
+      /* Main Card Container */
+      .profile-card {
+        background-color: #fff;
+        width: 1000px;
+        max-width: 95%;
+        height: 600px; /* Fixed height for the layout look */
+        display: flex;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* --- Left Section (Image) --- */
+      .left-section {
+        width: 45%;
+        position: relative;
+        height: 100%;
+        overflow: hidden; /* Clips the image if it zooms */
+      }
+
+      /* The Image itself */
+      .model-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Turn image grayscale */
+        filter: grayscale(100%) contrast(1.1);
+        display: block;
+      }
+
+      /* The Yellow Vertical Overlay Strip */
+      .yellow-overlay-strip {
+        position: absolute;
+        top: 0;
+        left: 35%; /* Adjust position based on where you want the line */
+        width: 30%; /* Width of the yellow bar */
+        height: 100%;
+        background-color: var(--primary-yellow);
+        /* This is the magic that blends the color into the grayscale image */
+        mix-blend-mode: multiply;
+        opacity: 0.9;
+      }
+
+      /* Social Handle Text */
+      .social-handle {
+        position: absolute;
+        top: 40px;
+        left: 40px;
+        z-index: 10;
+        font-family: "Montserrat", sans-serif;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #000;
+      }
+
+      /* --- Right Section (Content) --- */
+      .right-section {
+        width: 55%;
+        padding: 60px 50px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      /* Header Text Group */
+      .header-group {
+        margin-bottom: 40px;
+      }
+
+      .greeting {
+        font-family: "Montserrat", sans-serif;
+        font-size: 1rem;
+        letter-spacing: 1px;
+        color: var(--text-dark);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+
+      .name {
+        font-family: "Montserrat", sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--primary-blue);
+        line-height: 1.1;
+        margin-bottom: 5px;
+      }
+
+      .title {
+        font-family: "Montserrat", sans-serif;
+        font-size: 1.8rem;
+        font-weight: 400;
+        color: var(--primary-blue);
+      }
+
+      /* Body Text */
+      .bio-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-grey);
+        max-width: 90%;
+        text-align: justify;
+      }
+
+      /* --- Decorative Bottom Right Elements --- */
+
+      /* The thin vertical line */
+      .deco-line {
+        position: absolute;
+        bottom: 0;
+        right: 220px; /* Spacing from the block */
+        width: 15px;
+        height: 40%; /* Height relative to container */
+        background-color: var(--primary-yellow);
+      }
+
+      /* The large yellow block */
+      .deco-block {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 200px;
+        height: 40%;
+        background-color: var(--primary-yellow);
+      }
+
+      /* --- Mobile Responsiveness --- */
+      @media (max-width: 768px) {
+        .profile-card {
+          flex-direction: column;
+          height: auto;
+          width: 100%;
+        }
+        .left-section,
+        .right-section {
+          width: 100%;
+        }
+        .left-section {
+          height: 400px;
+        }
+        .deco-block,
+        .deco-line {
+          height: 100px; /* Smaller decor on mobile */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-card">
+      <div class="left-section">
+        <div class="social-handle">@reallygreatsite</div>
+
+        <img
+          src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=987&auto=format&fit=crop"
+          alt="Dani Martinez Profile"
+          class="model-image"
+        />
+      </div>
+
+      <div class="right-section">
+        <div class="header-group">
+          <p class="greeting">Hello, I'm</p>
+          <h1 class="name" id="profileName">Dani Martinez</h1>
+          <h3 class="title">Digital Marketing</h3>
+        </div>
+
+        <p class="bio-text">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur a
+          lacus turpis. Mauris porttitor in augue a posuere. Curabitur sodales
+          mi vel nulla vulputate aliquet. In quis vestibulum eros, eu molestie
+          enim. Donec mauris massa, varius non erat at, ornare dictum nulla.
+          Nulla porttitor, velit eu pretium venenatis, nisl sapien iaculis sem,
+          nec suscipit urna nunc eget nunc.
+        </p>
+
+        <div class="deco-line"></div>
+        <div class="deco-block"></div>
+      </div>
+    </div>
+
+    <script>
+      // JAVASCRIPT
+      // Adding a simple interaction: Console log when the card is loaded
+      console.log("Profile Card Template Loaded Successfully");
+
+      // Example interaction: Click the name to alert
+      const nameElement = document.getElementById("profileName");
+      nameElement.style.cursor = "pointer";
+      nameElement.title = "Click to greet";
+
+      nameElement.addEventListener("click", () => {
+        alert("You clicked on Dani Martinez's profile!");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marco Romero Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand-red: #d92344;
+        --brand-black: #111111;
+        --text-white: #ffffff;
+        --text-gray: #b3b3b3;
+
+        background-color: #0a0a0a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        /* Dark background with a subtle red glow as requested */
+        background-color: #0a0a0a;
+        background-image: radial-gradient(
+          circle at 50% 50%,
+          #2a050b 0%,
+          #0a0a0a 70%
+        );
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+      }
+
+      /* Main Card Container */
+      .card {
+        width: 100%;
+        max-width: 500px;
+        background-color: var(--brand-black);
+        color: var(--text-white);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* --- Header Section --- */
+      .header {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        min-height: 220px;
+      }
+
+      .header-text {
+        padding: 40px 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .name-title {
+        font-size: 48px;
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 20px;
+      }
+
+      .bio {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--text-gray);
+        max-width: 90%;
+      }
+
+      .header-logo-box {
+        background-color: var(--brand-red);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      /* CSS Logo construction to avoid external dependency */
+      .logo-icon {
+        width: 60px;
+        height: 60px;
+        border: 5px solid white;
+        border-radius: 50% 50% 0 50%;
+        transform: rotate(-45deg);
+        margin-bottom: 10px;
+        position: relative;
+      }
+
+      .logo-icon::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+      }
+
+      .logo-text {
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      /* --- Image Section --- */
+      .image-container {
+        width: 100%;
+        height: 550px; /* Tall vertical aspect ratio */
+        overflow: hidden;
+        position: relative;
+      }
+
+      .profile-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        /* High quality placeholder */
+        background-image: url("https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=1000");
+        background-size: cover;
+        background-position: center 20%;
+      }
+
+      /* --- Footer Section --- */
+      .footer {
+        background-color: var(--brand-red);
+        padding: 25px 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .footer-col h4 {
+        font-size: 10px;
+        opacity: 0.9;
+        margin-bottom: 4px;
+        font-weight: 400;
+      }
+
+      .footer-col p {
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .arrow-box {
+        background: white;
+        width: 30px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--brand-red);
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      /* Mobile Adjustments */
+      @media (max-width: 600px) {
+        .header {
+          grid-template-columns: 1fr;
+        }
+        .header-logo-box {
+          min-height: 150px;
+        }
+        .footer {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .image-container {
+          height: 400px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <div class="header-text">
+          <h1 class="name-title">Marco<br />Romero</h1>
+          <p class="bio">
+            Marco Romero is a Chief Marketing Officer who has experience in
+            various companies around the world.
+          </p>
+        </div>
+        <div class="header-logo-box">
+          <div class="logo-icon"></div>
+          <div class="logo-text">Business<br />Agency</div>
+        </div>
+      </div>
+
+      <div class="image-container">
+        <div class="profile-img"></div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-col">
+          <h4>Contact us only at:</h4>
+          <p>+ 123-456-7890</p>
+        </div>
+        <div class="footer-col">
+          <h4>Visit our website:</h4>
+          <p>reallygreatsite.com</p>
+        </div>
+        <div class="footer-col">
+          <h4>Visit our social media:</h4>
+          <p>@reallygreatsite</p>
+        </div>
+        <div class="arrow-box">➔</div>
+      </div>
+    </div>
+  </body>
+</html>

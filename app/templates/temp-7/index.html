@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Henrietta Mitchell Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400&family=Reenie+Beanie&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #e5e5e5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: "Inter", sans-serif;
+      }
+
+      .card {
+        background-color: #f1f2ee;
+        width: 500px;
+        padding: 40px;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .header-handle {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .image-container {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+      }
+
+      .profile-img {
+        width: 75%;
+        aspect-ratio: 4/5;
+        object-fit: cover;
+        /* Placeholder for the user in the image */
+        background-image: url("https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%2Fid%2FOIP.qHch2ev5GjUJDkLFAc7kBAHaLH%3Fpid%3DApi&f=1&ipt=c00320d8730c16b232bb841a0e2f31cee3c525828f758beb9d3d8841e3edfc76&ipo=images");
+        background-size: cover;
+      }
+
+      .intro-text {
+        font-family: "Reenie Beanie", cursive;
+        font-size: 42px;
+        color: #333;
+        margin-bottom: -10px;
+        transform: rotate(-2deg);
+      }
+
+      .name-container {
+        line-height: 0.85;
+        margin-bottom: 20px;
+      }
+
+      .name-main {
+        font-family: "Archivo Black", sans-serif;
+        font-size: 72px;
+        text-transform: uppercase;
+        color: #444;
+        letter-spacing: -3px;
+      }
+
+      .name-sub {
+        font-family: "Archivo Black", sans-serif;
+        font-size: 32px;
+        text-transform: uppercase;
+        color: #444;
+        display: block;
+      }
+
+      .description {
+        font-size: 14px;
+        line-height: 1.4;
+        color: #333;
+        max-width: 95%;
+        text-align: justify;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header-handle">@reallygreatsite</div>
+
+      <div class="image-container">
+        <div class="profile-img"></div>
+      </div>
+
+      <div class="intro-text">Hi, I'm</div>
+
+      <div class="name-container">
+        <span class="name-main">HENRIETTA</span>
+        <span class="name-sub">MITCHELL</span>
+      </div>
+
+      <p class="description">
+        I help women turn their ideas into unforgettable brands. I believe that
+        when a brand tells an authentic story, it can inspire, connect, and grow
+        without limits. My goal is for every woman to feel confident and proud
+        of her brand. That's why I create strategies that are personal,
+        practical, and support real growth.
+      </p>
+    </div>
+  </body>
+</html>

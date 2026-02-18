@@ -17,10 +17,13 @@ import {
     Sparkles,
     Loader2,
     MessageSquare,
-    Lightbulb
+    Lightbulb,
+    Upload,
+    ImageIcon,
 } from 'lucide-react';
 import { ProfileData } from '../lib/schema';
 import { enhanceProfileSection } from '../lib/groq';
+
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Section configuration
@@ -216,8 +219,70 @@ export default function GuidedReviewOverlay({
     const rafRef = useRef<number>(0);
 
     // Collapsible guidance state
-    const [showGuidance, setShowGuidance] = useState(false);
+    const [showGuidance, setShowGuidance] = useState(true);
 
+    // Image upload state
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // ── Image upload handler (via server API to bypass RLS) ────────────────
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please select an image file.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setUploadError('Image must be under 5MB.');
+            return;
+        }
+
+        setIsUploading(true);
+        setUploadError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/api/upload-image', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!res.ok) {
+                setUploadError(data.error || 'Upload failed.');
+                return;
+            }
+
+            if (data.url) {
+                setFieldValue('profilePhoto', data.url);
+            }
+        } catch (err) {
+            console.error('Image upload failed:', err);
+            setUploadError('Upload failed. Please try again.');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    // ── Image remove handler ────────────────────────────────────────────────
+    const handleRemoveImage = async () => {
+        const currentUrl = (getFieldValue('profilePhoto') as string) || '';
+        setFieldValue('profilePhoto', '');
+        if (currentUrl) {
+            try {
+                await fetch('/api/upload-image', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: currentUrl }),
+                });
+            } catch (err) {
+                console.error('Failed to delete image from storage:', err);
+            }
+        }
+    };
     const section = REVIEW_SECTIONS[currentStep];
     const totalSteps = REVIEW_SECTIONS.length;
 
@@ -329,6 +394,81 @@ export default function GuidedReviewOverlay({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep]);
 
+    // ── Click-to-navigate (Event Delegation) ────────────────────────────────
+    useEffect(() => {
+        const container = document.getElementById(previewContainerId);
+        if (!container) return;
+
+        // 1. Inject styles for pointer cursor on hover
+        // We do this via style tag because the elements inside container are re-created
+        // whenever data changes (dangerouslySetInnerHTML), so direct style manipulation is lost.
+        const styleId = 'guided-review-cursor-styles';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                #${previewContainerId} .header-container,
+                #${previewContainerId} .prompt-box,
+                #${previewContainerId} .roles-section,
+                #${previewContainerId} .brands-section,
+                #${previewContainerId} .impact-section,
+                #${previewContainerId} .awards-section,
+                #${previewContainerId} .social-links,
+                #${previewContainerId} .contact-section {
+                    cursor: pointer !important;
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                #${previewContainerId} .header-container:hover,
+                #${previewContainerId} .prompt-box:hover,
+                #${previewContainerId} .roles-section:hover,
+                #${previewContainerId} .brands-section:hover,
+                #${previewContainerId} .impact-section:hover,
+                #${previewContainerId} .awards-section:hover,
+                #${previewContainerId} .social-links:hover,
+                #${previewContainerId} .contact-section:hover {
+                    box-shadow: 0 0 0 2px rgba(1, 51, 76, 0.1);
+                    border-radius: 4px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 2. Event Delegation Handler
+        const clickHandler = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+
+            // Find which section matched
+            const matchedSectionIndex = REVIEW_SECTIONS.findIndex(sec => {
+                return target.closest(sec.selector);
+            });
+
+            if (matchedSectionIndex !== -1 && matchedSectionIndex !== currentStep) {
+                e.stopPropagation();
+
+                // Apply pending edits before navigating
+                if (Object.keys(localEdits).length > 0) {
+                    onMerge(localEdits);
+                    setLocalEdits({});
+                }
+
+                setIsTransitioning(true);
+                // navigate
+                setTimeout(() => {
+                    setCurrentStep(matchedSectionIndex);
+                    setIsTransitioning(false);
+                }, 300);
+            }
+        };
+
+        container.addEventListener('click', clickHandler);
+        return () => {
+            container.removeEventListener('click', clickHandler);
+            // Cleanup styles when component unmounts
+            const styleEl = document.getElementById(styleId);
+            if (styleEl) styleEl.remove();
+        };
+    }, [currentStep, previewContainerId, localEdits, onMerge]);
+
     // ── Navigation ──────────────────────────────────────────────────────────
     const goNext = useCallback(() => {
         if (navDebounceRef.current) return;
@@ -406,9 +546,66 @@ export default function GuidedReviewOverlay({
     // ── Render section-specific edit fields ──────────────────────────────────
     const renderEditFields = () => {
         switch (section.id) {
-            case 'identity':
+            case 'identity': {
+                const currentPhoto = (getFieldValue('profilePhoto') as string) || '';
                 return (
                     <div className="space-y-4 animate-fade-in-up">
+                        {/* ── Profile Photo ──────────────────── */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Profile Photo</label>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
+                            {currentPhoto ? (
+                                <div className="relative w-full h-28 rounded-xl overflow-hidden border border-slate-200 group">
+                                    <img src={currentPhoto} alt="Profile" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={isUploading}
+                                            className="px-3 py-1.5 rounded-lg bg-white text-[#01334c] text-[11px] font-bold hover:bg-slate-100 transition-colors"
+                                        >
+                                            Change
+                                        </button>
+                                        <button
+                                            onClick={handleRemoveImage}
+                                            className="px-3 py-1.5 rounded-lg bg-white/20 text-white text-[11px] font-bold hover:bg-white/30 transition-colors"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                    {isUploading && (
+                                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                                            <Loader2 className="w-5 h-5 text-[#01334c] animate-spin" />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="w-full h-28 rounded-xl border-2 border-dashed border-[#01334c]/25 bg-slate-50/50 hover:bg-[#01334c]/[0.03] hover:border-[#01334c]/40 transition-all flex flex-col items-center justify-center gap-1.5 disabled:opacity-50 group"
+                                >
+                                    {isUploading ? (
+                                        <Loader2 className="w-6 h-6 text-[#01334c]/50 animate-spin" />
+                                    ) : (
+                                        <div className="w-9 h-9 rounded-full bg-[#01334c]/10 flex items-center justify-center group-hover:bg-[#01334c]/15 transition-colors">
+                                            <Upload className="w-4 h-4 text-[#01334c]" />
+                                        </div>
+                                    )}
+                                    <span className="text-xs font-medium text-slate-500">
+                                        {isUploading ? 'Uploading…' : 'Browse Files to upload'}
+                                    </span>
+                                </button>
+                            )}
+                            {uploadError && <p className="text-[10px] text-red-500">{uploadError}</p>}
+                        </div>
+
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
                             <input
@@ -478,6 +675,7 @@ export default function GuidedReviewOverlay({
                         </div>
                     </div>
                 );
+            }
 
             case 'story':
                 return (
@@ -882,7 +1080,7 @@ export default function GuidedReviewOverlay({
                         ? '0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 30px rgba(1, 51, 76, 0.15)'
                         : '0 0 0 0 rgba(15, 23, 42, 0.25)',
                     opacity: highlightVisible && highlightRect ? 1 : highlightRect ? 0.3 : 0.6,
-                    zIndex: 9998,
+                    zIndex: 20,
                     pointerEvents: 'none',
                     transition: 'top 0.5s cubic-bezier(0.4,0,0.2,1), left 0.5s cubic-bezier(0.4,0,0.2,1), width 0.5s cubic-bezier(0.4,0,0.2,1), height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, border-radius 0.4s ease',
                 }}
@@ -935,91 +1133,95 @@ export default function GuidedReviewOverlay({
                     <p className="text-xs text-slate-600 leading-relaxed">{section.description}</p>
                 </div>
 
-                {/* Collapsible Guidance */}
-                <div className="flex-shrink-0 border-b border-slate-100">
-                    <button
-                        onClick={() => setShowGuidance(!showGuidance)}
-                        className="w-full px-6 py-2.5 flex items-center gap-2 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50/60 hover:bg-amber-50 transition-colors"
-                    >
-                        <Lightbulb className="w-3 h-3" />
-                        <span>Expert Tips & Examples</span>
-                        <ChevronDown className={`w-3 h-3 ml-auto transition-transform ${showGuidance ? 'rotate-180' : ''}`} />
-                    </button>
-                    {showGuidance && (
-                        <div className="px-6 py-4 bg-amber-50/30 space-y-4 animate-fade-in-up">
-                            <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
-                                <p className="text-xs text-slate-600 leading-relaxed mb-3">{section.guidance}</p>
-                                <div className="space-y-1.5">
-                                    {section.tips.map((tip, i) => (
-                                        <div key={i} className="flex items-start gap-2 text-[11px] text-slate-500">
-                                            <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
-                                            <span>{tip}</span>
+                {/* Scrollable content: guidance + edit fields together */}
+                <div ref={cardBodyRef} className="flex-1 overflow-y-auto">
+
+                    {/* Collapsible Guidance */}
+                    <div className="border-b border-slate-100">
+                        <button
+                            onClick={() => setShowGuidance(!showGuidance)}
+                            className="w-full px-6 py-2.5 flex items-center gap-2 text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50/60 hover:bg-amber-50 transition-colors"
+                        >
+                            <Lightbulb className="w-3 h-3" />
+                            <span>Expert Tips & Examples</span>
+                            <ChevronDown className={`w-3 h-3 ml-auto transition-transform ${showGuidance ? 'rotate-180' : ''}`} />
+                        </button>
+                        {showGuidance && (
+                            <div className="px-6 py-4 bg-amber-50/30 space-y-4 animate-fade-in-up">
+                                <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm">
+                                    <p className="text-xs text-slate-600 leading-relaxed mb-3">{section.guidance}</p>
+                                    <div className="space-y-1.5">
+                                        {section.tips.map((tip, i) => (
+                                            <div key={i} className="flex items-start gap-2 text-[11px] text-slate-500">
+                                                <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 flex-shrink-0" />
+                                                <span>{tip}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {section.examples && section.examples.length > 0 && (
+                                    <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 space-y-1.5">
+                                        <h4 className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2">Examples</h4>
+                                        {section.examples.map((ex, i) => (
+                                            <p key={i} className="text-[11px] text-emerald-800/80 italic border-l-2 border-emerald-300 pl-2.5 py-0.5">
+                                                &ldquo;{ex}&rdquo;
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Edit fields */}
+                    <div className="px-6 py-5">
+
+                        {/* AI Suggestion Overlay */}
+                        {aiSuggestion && (
+                            <div className="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4 animate-fade-in-up shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-violet-900">AI Enhancement Ready</h4>
+                                        <p className="text-[10px] text-violet-600">Review the suggested improvements</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5 mb-3 bg-white/60 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar border border-violet-100/50">
+                                    {Object.entries(aiSuggestion).map(([key, value]) => (
+                                        <div key={key} className="text-[11px] text-slate-700">
+                                            <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-1.5">{key}:</span>
+                                            <span className="leading-relaxed">{typeof value === 'string' ? value : Array.isArray(value) ? value.join(', ') : JSON.stringify(value)}</span>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
 
-                            {section.examples && section.examples.length > 0 && (
-                                <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 space-y-1.5">
-                                    <h4 className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-2">Examples</h4>
-                                    {section.examples.map((ex, i) => (
-                                        <p key={i} className="text-[11px] text-emerald-800/80 italic border-l-2 border-emerald-300 pl-2.5 py-0.5">
-                                            "{ex}"
-                                        </p>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Scrollable edit content */}
-                <div ref={cardBodyRef} className="flex-1 overflow-y-auto px-6 py-5">
-
-                    {/* AI Suggestion Overlay */}
-                    {aiSuggestion && (
-                        <div className="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4 animate-fade-in-up shadow-sm">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                </div>
-                                <div>
-                                    <h4 className="text-xs font-bold text-violet-900">AI Enhancement Ready</h4>
-                                    <p className="text-[10px] text-violet-600">Review the suggested improvements</p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => {
+                                            onMerge(aiSuggestion);
+                                            setAiSuggestion(null);
+                                        }}
+                                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
+                                    >
+                                        <Check className="w-3 h-3" /> Accept & Use
+                                    </button>
+                                    <button
+                                        onClick={() => setAiSuggestion(null)}
+                                        className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
+                                    >
+                                        Discard
+                                    </button>
                                 </div>
                             </div>
+                        )}
 
-                            <div className="space-y-1.5 mb-3 bg-white/60 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar border border-violet-100/50">
-                                {Object.entries(aiSuggestion).map(([key, value]) => (
-                                    <div key={key} className="text-[11px] text-slate-700">
-                                        <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-1.5">{key}:</span>
-                                        <span className="leading-relaxed">{typeof value === 'string' ? value : Array.isArray(value) ? value.join(', ') : JSON.stringify(value)}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => {
-                                        onMerge(aiSuggestion);
-                                        setAiSuggestion(null);
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
-                                >
-                                    <Check className="w-3 h-3" /> Accept & Use
-                                </button>
-                                <button
-                                    onClick={() => setAiSuggestion(null)}
-                                    className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
-                                >
-                                    Discard
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Main Input Fields */}
-                    {renderEditFields()}
+                        {/* Main Input Fields */}
+                        {renderEditFields()}
+                    </div>
                 </div>
 
                 {/* Footer Actions */}

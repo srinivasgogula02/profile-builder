@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jules - Creative Profile</title>
+    <style>
+      /* --- FONTS --- */
+      @import url("https://fonts.googleapis.com/css2?family=Chewy&family=Patrick+Hand&family=Coming+Soon&display=swap");
+
+      /* --- VARIABLES --- */
+      :root {
+        --bg-cream: #faf9f4;
+        --box-pink: #fbc0c7;
+        --box-border: #2c2525;
+        --box-white: #ffffff;
+        --accent-teal: #8cd8c9;
+        --accent-yellow: #f7d265;
+        --text-dark: #2c2525;
+      }
+
+      /* --- RESET & BASIC SETUP --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--bg-cream);
+        font-family: "Patrick Hand", cursive;
+        color: var(--text-dark);
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      .main-wrapper {
+        width: 100%;
+        max-width: 800px;
+        position: relative;
+      }
+
+      /* --- TYPOGRAPHY --- */
+      h1 {
+        font-family: "Chewy", cursive;
+        font-size: 3.5rem;
+        text-align: center;
+        margin-bottom: 30px;
+        color: var(--text-dark);
+        letter-spacing: 1px;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 span {
+        font-size: 0.8em; /* The "OF" is smaller */
+      }
+
+      .handwritten {
+        font-family: "Patrick Hand", cursive;
+      }
+
+      .label-text {
+        font-family: "Coming Soon", cursive;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+        display: block;
+        color: #333;
+      }
+
+      /* --- BROWSER WINDOW COMPONENTS --- */
+      .window-container {
+        border: 3px solid var(--box-border);
+        border-radius: 12px;
+        background-color: var(--box-pink);
+        margin-bottom: 30px;
+        box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+        position: relative;
+        z-index: 2;
+      }
+
+      .window-header {
+        background-color: var(--box-border);
+        color: white;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 9px 9px 0 0; /* Slightly less to account for border */
+      }
+
+      .window-title {
+        font-family: "Patrick Hand", cursive;
+        font-size: 1.5rem;
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 6px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #8cd8c9; /* Teal dots */
+      }
+
+      .window-body {
+        padding: 20px;
+      }
+
+      /* --- WHITE BOX STYLES --- */
+      .white-card {
+        background: var(--box-white);
+        border: 2px solid var(--box-border);
+        border-radius: 4px; /* Slightly rough edges look */
+        padding: 15px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+      }
+
+      /* --- SECTION 1: PROFILE INFO --- */
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1.8fr; /* Photo takes less space */
+        gap: 20px;
+      }
+
+      .photo-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .photo-frame {
+        width: 100%;
+        aspect-ratio: 1/1;
+        overflow: hidden;
+        border-radius: 20px; /* Rounded blobby feel */
+        border: 2px solid white; /* Optional inner border */
+        position: relative;
+      }
+
+      .photo-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 15px;
+      }
+
+      .stat-box {
+        min-height: 80px;
+      }
+
+      .school-box {
+        grid-column: 1 / -1; /* Span full width */
+        min-height: 80px;
+      }
+
+      /* --- SECTION 2: Q&A GRID --- */
+      .qa-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .qa-box {
+        min-height: 180px;
+        justify-content: flex-start;
+        padding-top: 25px;
+      }
+
+      .qa-answer {
+        font-size: 1.2rem;
+        line-height: 1.4;
+        margin-top: 10px;
+      }
+
+      /* --- DECORATIONS (DOODLES) --- */
+      .doodle {
+        position: absolute;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      /* Specific positions for doodles */
+      .sparkle-tl {
+        top: -20px;
+        left: -10px;
+        width: 40px;
+      }
+      .sparkle-tr {
+        top: -10px;
+        right: -20px;
+        width: 50px;
+      }
+
+      .squiggle-left {
+        top: 220px;
+        left: -60px;
+        width: 80px;
+        transform: rotate(-10deg);
+      }
+
+      .lightning-right {
+        top: 500px;
+        right: -50px;
+        width: 60px;
+      }
+
+      .hearts-bl {
+        bottom: 20px;
+        left: -40px;
+        width: 50px;
+      }
+
+      .geo-br {
+        bottom: -30px;
+        right: -30px;
+        width: 100px;
+        z-index: 0;
+      }
+
+      /* --- RESPONSIVE --- */
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+        .qa-grid {
+          grid-template-columns: 1fr;
+        }
+        .main-wrapper {
+          padding: 0 10px;
+        }
+        .squiggle-left,
+        .lightning-right {
+          display: none;
+        } /* Hide side doodles on mobile */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-wrapper">
+      <svg class="doodle sparkle-tl" viewBox="0 0 50 50" fill="none">
+        <path
+          d="M25 0 L28 17 L45 17 L31 28 L36 45 L25 35 L14 45 L19 28 L5 17 L22 17 Z"
+          stroke="black"
+          stroke-width="2"
+          fill="#faf9f4"
+        />
+      </svg>
+
+      <svg class="doodle sparkle-tr" viewBox="0 0 60 60">
+        <path
+          d="M30 5 L35 20 L50 20 L38 30 L43 45 L30 35 L17 45 L22 30 L10 20 L25 20 Z"
+          stroke="black"
+          stroke-width="2"
+          fill="#f7d265"
+        />
+        <path
+          d="M50 0 L52 8 L60 8 L54 14 L56 22 L50 17 L44 22 L46 14 L40 8 L48 8 Z"
+          stroke="black"
+          stroke-width="2"
+          fill="white"
+        />
+      </svg>
+
+      <svg class="doodle squiggle-left" viewBox="0 0 100 100">
+        <path
+          d="M20 20 C 60 20, 60 40, 30 40 C 10 40, 10 60, 40 60 C 70 60, 70 80, 20 80"
+          stroke="#f7d265"
+          stroke-width="6"
+          fill="none"
+          stroke-linecap="round"
+        />
+        <path
+          d="M20 20 C 60 20, 60 40, 30 40 C 10 40, 10 60, 40 60 C 70 60, 70 80, 20 80"
+          stroke="black"
+          stroke-width="1.5"
+          fill="none"
+          stroke-linecap="round"
+          style="opacity: 0.5"
+        />
+      </svg>
+
+      <h1>MEET THE <span>CREATOR</span></h1>
+
+      <div class="window-container">
+        <div class="window-header">
+          <span class="window-title">Name: Jules</span>
+          <div class="window-controls">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+        <div class="window-body">
+          <div class="profile-grid">
+            <div class="photo-area">
+              <div class="photo-frame">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                  alt="Jules Portrait"
+                />
+
+                <svg
+                  style="position: absolute; top: 5px; right: 5px; width: 20px"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M10 0 L12 7 L19 7 L13 12 L15 19 L10 15 L5 19 L7 12 L1 7 L8 7 Z"
+                    fill="#f7d265"
+                    stroke="black"
+                    stroke-width="1"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="white-card stat-box">
+                <span class="label-text">ROLE</span>
+                <span class="handwritten" style="font-size: 1.3rem"
+                  >Visual Artist</span
+                >
+              </div>
+              <div class="white-card stat-box">
+                <span class="label-text">EXPERIENCE</span>
+                <span class="handwritten" style="font-size: 1.3rem"
+                  >4 Years</span
+                >
+              </div>
+              <div class="white-card school-box">
+                <span class="label-text">CURRENT FOCUS</span>
+                <span class="handwritten" style="font-size: 1.4rem"
+                  >Digital Illustration</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="window-container">
+        <div class="window-header">
+          <span class="window-title"></span>
+          <div class="window-controls">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+        <div class="window-body">
+          <div class="qa-grid">
+            <div class="white-card qa-box">
+              <span class="label-text">LATEST</span>
+              <span class="label-text">PROJECT:</span>
+              <p class="qa-answer">
+                Just finished a 50-page graphic novel zine about space cats!
+              </p>
+            </div>
+
+            <div class="white-card qa-box">
+              <span class="label-text">WHAT I WANT TO</span>
+              <span class="label-text">LEARN THIS YEAR:</span>
+              <p class="qa-answer">
+                I'm trying to master Blender 3D and simple animation.
+              </p>
+            </div>
+
+            <div class="white-card qa-box">
+              <span class="label-text">MY TOOLKIT:</span>
+              <p class="qa-answer">
+                Procreate, iPad Air, 2B Pencils, and too much Coffee.
+              </p>
+            </div>
+
+            <div class="white-card qa-box">
+              <span class="label-text">DREAM COLLAB</span>
+              <p class="qa-answer" style="margin: 5px 0">Studio Ghibli</p>
+              <span class="label-text">Background Art</span>
+            </div>
+          </div>
+        </div>
+
+        <svg
+          style="
+            position: absolute;
+            bottom: 20px;
+            left: -15px;
+            width: 30px;
+            height: 30px;
+          "
+          viewBox="0 0 30 30"
+        >
+          <path
+            d="M10 5 Q 20 15 10 25"
+            stroke="black"
+            stroke-width="2"
+            fill="none"
+          />
+          <path
+            d="M20 5 Q 30 15 20 25"
+            stroke="black"
+            stroke-width="2"
+            fill="none"
+          />
+        </svg>
+
+        <svg
+          style="
+            position: absolute;
+            bottom: 30px;
+            right: 48%;
+            width: 40px;
+            height: 40px;
+          "
+          viewBox="0 0 50 50"
+        >
+          <path
+            d="M10 10 C 10 30, 40 30, 40 10"
+            stroke="black"
+            stroke-width="2"
+            fill="none"
+          />
+          <circle cx="10" cy="10" r="3" fill="black" />
+          <circle cx="40" cy="10" r="3" fill="black" />
+        </svg>
+      </div>
+
+      <svg class="doodle lightning-right" viewBox="0 0 50 100">
+        <path
+          d="M30 0 L0 50 L20 50 L10 100 L45 40 L25 40 L35 0 Z"
+          stroke="black"
+          stroke-width="2"
+          fill="none"
+        />
+      </svg>
+
+      <div class="doodle hearts-bl">
+        <svg viewBox="0 0 50 50">
+          <path
+            d="M25 45 C 0 30, 0 10, 25 10 C 50 10, 50 30, 25 45"
+            stroke="black"
+            stroke-width="1.5"
+            fill="none"
+          />
+        </svg>
+        <svg viewBox="0 0 30 30" style="margin-left: -10px; margin-top: 10px">
+          <path
+            d="M15 25 C 0 15, 0 5, 15 5 C 30 5, 30 15, 15 25"
+            stroke="black"
+            stroke-width="1.5"
+            fill="none"
+          />
+        </svg>
+      </div>
+
+      <svg class="doodle geo-br" viewBox="0 0 100 50">
+        <path
+          d="M10 50 A 40 40 0 0 1 90 50"
+          fill="#8cd8c9"
+          stroke="black"
+          stroke-width="2"
+        />
+        <path
+          d="M15 45 L 25 35 L 35 45 L 45 35 L 55 45 L 65 35 L 75 45 L 85 35"
+          stroke="black"
+          stroke-width="2"
+          fill="none"
+        />
+        <path
+          d="M70 -10 L 80 10 L 70 30 L 60 10 Z"
+          fill="#f7d265"
+          stroke="black"
+          stroke-width="2"
+          transform="rotate(15) translate(20, -30)"
+        />
+      </svg>
+    </div>
+
+    <script>
+      // Just a little interactivity to make the doodle float
+      const doodles = document.querySelectorAll(".doodle");
+
+      doodles.forEach((doodle, index) => {
+        // Random float animation
+        let time = Math.random() * 100;
+        setInterval(() => {
+          time += 0.05;
+          const y = Math.sin(time) * 5;
+          doodle.style.transform = `translateY(${y}px)`;
+        }, 50);
+      });
+    </script>
+  </body>
+</html>

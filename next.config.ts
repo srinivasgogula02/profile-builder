@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY', // Prevent clickjacking
+            value: 'SAMEORIGIN', // Allow same-origin iframes for template previews
           },
           {
             key: 'X-Content-Type-Options',
@@ -35,12 +35,13 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com",
-              "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com",
+              "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://cdn.jsdelivr.net",
               "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.supabase.co https://*.onrender.com https://api.groq.com https://generativelanguage.googleapis.com https://gateway.ai.cloudflare.com https://api.openai.com",
-              "frame-ancestors 'none'",
+              "connect-src 'self' https://*.supabase.co https://*.onrender.com https://api.groq.com https://generativelanguage.googleapis.com https://gateway.ai.cloudflare.com https://api.openai.com https://control.msg91.com",
+              "frame-src 'self'",
+              "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self' https://*.supabase.co",
             ].join('; '),
