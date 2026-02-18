@@ -1005,7 +1005,7 @@ export default function GuidedReviewOverlay({
                         ? '0 0 0 9999px rgba(15, 23, 42, 0.25), 0 0 30px rgba(1, 51, 76, 0.15)'
                         : '0 0 0 0 rgba(15, 23, 42, 0.25)',
                     opacity: highlightVisible && highlightRect ? 1 : highlightRect ? 0.3 : 0.6,
-                    zIndex: 9998,
+                    zIndex: 20,
                     pointerEvents: 'none',
                     transition: 'top 0.5s cubic-bezier(0.4,0,0.2,1), left 0.5s cubic-bezier(0.4,0,0.2,1), width 0.5s cubic-bezier(0.4,0,0.2,1), height 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease, border-radius 0.4s ease',
                 }}
