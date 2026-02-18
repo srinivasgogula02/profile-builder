@@ -60,3 +60,36 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const { url } = await req.json();
+
+        if (!url || typeof url !== 'string') {
+            return NextResponse.json({ error: 'No url provided' }, { status: 400 });
+        }
+
+        // Extract file path from public URL
+        // URL format: .../storage/v1/object/public/user_images/uploads/filename.ext
+        const marker = '/user_images/';
+        const idx = url.indexOf(marker);
+        if (idx === -1) {
+            return NextResponse.json({ error: 'Invalid storage URL' }, { status: 400 });
+        }
+        const filePath = url.substring(idx + marker.length);
+
+        const { error } = await supabaseAdmin.storage
+            .from('user_images')
+            .remove([filePath]);
+
+        if (error) {
+            console.error('Delete error:', error);
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error('Delete failed:', err);
+        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+    }
+}

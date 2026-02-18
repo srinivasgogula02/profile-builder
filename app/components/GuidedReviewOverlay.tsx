@@ -267,6 +267,22 @@ export default function GuidedReviewOverlay({
         }
     };
 
+    // ── Image remove handler ────────────────────────────────────────────────
+    const handleRemoveImage = async () => {
+        const currentUrl = (getFieldValue('profilePhoto') as string) || '';
+        setFieldValue('profilePhoto', '');
+        if (currentUrl) {
+            try {
+                await fetch('/api/upload-image', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: currentUrl }),
+                });
+            } catch (err) {
+                console.error('Failed to delete image from storage:', err);
+            }
+        }
+    };
     const section = REVIEW_SECTIONS[currentStep];
     const totalSteps = REVIEW_SECTIONS.length;
 
@@ -481,7 +497,7 @@ export default function GuidedReviewOverlay({
                                             Change
                                         </button>
                                         <button
-                                            onClick={() => setFieldValue('profilePhoto', '')}
+                                            onClick={handleRemoveImage}
                                             className="px-3 py-1.5 rounded-lg bg-white/20 text-white text-[11px] font-bold hover:bg-white/30 transition-colors"
                                         >
                                             Remove
