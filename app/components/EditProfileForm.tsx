@@ -306,7 +306,7 @@ export default function EditProfileForm({
                         </label>
                         <input
                           type="text"
-                          value={pos.title}
+                          value={pos.title || ""}
                           onChange={(e) =>
                             updateItem("positions", index, {
                               ...pos,
@@ -322,7 +322,7 @@ export default function EditProfileForm({
                         </label>
                         <input
                           type="text"
-                          value={pos.company}
+                          value={pos.company || ""}
                           onChange={(e) =>
                             updateItem("positions", index, {
                               ...pos,
@@ -422,7 +422,7 @@ export default function EditProfileForm({
                         </label>
                         <input
                           type="text"
-                          value={edu.schoolName}
+                          value={edu.schoolName || ""}
                           onChange={(e) =>
                             updateItem("education", index, {
                               ...edu,

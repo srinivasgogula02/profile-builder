@@ -262,8 +262,8 @@ export default function Home() {
         setScrapeStatus("error");
         setScrapeMessage(
           data?.detail ||
-            data?.message ||
-            `Request failed with status ${res.status}`,
+          data?.message ||
+          `Request failed with status ${res.status}`,
         );
       }
     } catch {
@@ -460,9 +460,9 @@ export default function Home() {
   const overallProgress =
     SECTIONS.length > 0
       ? Math.round(
-          SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) /
-            SECTIONS.length,
-        )
+        SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) /
+        SECTIONS.length,
+      )
       : 0;
 
   // Get last bot message suggested replies
@@ -531,15 +531,15 @@ export default function Home() {
 
               {(scrapeStatus === "success" ||
                 scrapeStatus === "processing") && (
-                <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
-                  {scrapeStatus === "processing" ? (
-                    <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  )}
-                  <span className="font-medium">{scrapeMessage}</span>
-                </div>
-              )}
+                  <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
+                    {scrapeStatus === "processing" ? (
+                      <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    <span className="font-medium">{scrapeMessage}</span>
+                  </div>
+                )}
 
               {/* Actions */}
               <div className="space-y-3 pt-1">
@@ -587,7 +587,7 @@ export default function Home() {
                     doSkip();
                   }}
                   disabled={scrapeStatus === "loading"}
-                  className="w-full py-2.5 rounded-xl text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider transition-all duration-300 disabled:opacity-50"
                 >
                   Skip — I&apos;ll build from scratch
                 </button>
@@ -686,14 +686,13 @@ export default function Home() {
                 <div
                   key={section.id}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all duration-300 cursor-default flex items-center gap-1
-                    ${
-                      isComplete
-                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                        : isActive
-                          ? "bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20"
-                          : progress > 0
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-slate-100 text-slate-400 border border-slate-200"
+                    ${isComplete
+                      ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      : isActive
+                        ? "bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20"
+                        : progress > 0
+                          ? "bg-amber-50 text-amber-700 border border-amber-200"
+                          : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   title={`${section.label}: ${progress}%`}
                 >
@@ -717,11 +716,10 @@ export default function Home() {
               className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
             >
               <div
-                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${
-                  msg.sender === "user"
+                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${msg.sender === "user"
                     ? "bg-[#01334c] ring-4 ring-[#01334c]/10"
                     : "bg-slate-50 border border-slate-100"
-                }`}
+                  }`}
               >
                 {msg.sender === "user" ? (
                   <User className="w-4 h-4 text-white" />
@@ -731,11 +729,10 @@ export default function Home() {
               </div>
               <div className="space-y-2 max-w-[290px]">
                 <div
-                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${
-                    msg.sender === "user"
+                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${msg.sender === "user"
                       ? "bg-[#01334c] text-white rounded-tr-none shadow-[#01334c]/20"
                       : "bg-slate-50 border border-slate-100 text-slate-600 rounded-tl-none"
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>

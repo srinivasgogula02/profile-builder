@@ -352,15 +352,17 @@ export const renderProfile = (data: Partial<ProfileData>) => {
     </div>
   </div>
 
-  ${eStory ? `
-  <div class="prompt-box no-break" style="background-color: #FFF8E1; border-color: #FFD54F; flex-grow: 0; padding: 16px 20px; margin-top: 20px;">
-    <div style="color: #F57F17; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">✨ Personal Story</div>
-    <div style="color: #5D4037; font-size: 15px; font-weight: 500; font-style: italic; line-height: 1.5;">"${eStory}"</div>
-  </div>
-  ` : ''}
+  <div class="story-section-container">
+    ${eStory ? `
+    <div class="prompt-box no-break" style="background-color: #FFF8E1; border-color: #FFD54F; flex-grow: 0; padding: 16px 20px; margin-top: 20px;">
+      <div style="color: #F57F17; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">✨ Personal Story</div>
+      <div style="color: #5D4037; font-size: 15px; font-weight: 500; font-style: italic; line-height: 1.5;">"${eStory}"</div>
+    </div>
+    ` : ''}
 
-  <div class="prompt-box no-break" style="margin-top: 20px;">
-    <div class="prompt-text">${eAboutMe}</div>
+    <div class="prompt-box no-break" style="margin-top: 20px;">
+      <div class="prompt-text">${eAboutMe}</div>
+    </div>
   </div>
 
   <div class="roles-section no-break" style="margin-top: 20px;">
@@ -450,7 +452,7 @@ export const renderProfile = (data: Partial<ProfileData>) => {
   ` : ''}
 
   ${hasEducation ? `
-  <div class="section-box no-break" style="background-color: #f0f7ff; border: 1px solid #cce4ff; padding: 20px; margin-top: 20px;">
+  <div class="section-box education-section no-break" style="background-color: #f0f7ff; border: 1px solid #cce4ff; padding: 20px; margin-top: 20px;">
     <div class="section-header" style="color: #0056b3;">EDUCATION</div>
     <ul class="stats-list" style="margin-top: 10px; list-style: none; padding: 0;">
       ${education.map(e => `
@@ -467,7 +469,7 @@ export const renderProfile = (data: Partial<ProfileData>) => {
   ` : ''}
 
   ${hasCertifications ? `
-  <div class="section-box no-break" style="background-color: #E8F5E9; border: 1px solid #A5D6A7; padding: 20px; margin-top: 20px;">
+  <div class="section-box certifications-section no-break" style="background-color: #E8F5E9; border: 1px solid #A5D6A7; padding: 20px; margin-top: 20px;">
     <div class="section-header" style="color: #2E7D32;">CERTIFICATIONS</div>
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
       ${certifications.map(cert => `
@@ -480,7 +482,7 @@ export const renderProfile = (data: Partial<ProfileData>) => {
   ` : ''}
 
   ${hasSkills ? `
-  <div class="section-box no-break" style="background-color: #f7f7f7; border: 1px solid #ddd; padding: 20px; margin-top: 20px;">
+  <div class="section-box skills-section no-break" style="background-color: #f7f7f7; border: 1px solid #ddd; padding: 20px; margin-top: 20px;">
     <div class="section-header" style="color: #333;">SKILLS &amp; COMPETENCIES</div>
     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
       ${skills.slice(0, 15).map(skill => `
