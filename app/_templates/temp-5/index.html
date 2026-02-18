@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Founder Portfolio</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --accent: #d44d8b; /* The pink from your screenshot */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body,
+      html {
+        height: 100%;
+        width: 100%;
+        font-family: "Inter", sans-serif;
+        color: white;
+        background-color: #000;
+        overflow: hidden;
+      }
+
+      /* The Background Image - Full Screen Layering */
+      .hero-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        background:
+          linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0.4) 0%,
+            rgba(0, 0, 0, 0) 50%
+          ),
+          url("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=1600")
+            no-repeat center center;
+        background-size: cover;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end; /* Text on the right */
+        padding-right: 8%;
+      }
+
+      /* Top Right Branding */
+      .brand-logo {
+        position: absolute;
+        top: 40px;
+        right: 60px;
+        text-align: right;
+        border-right: 3px solid var(--accent);
+        padding-right: 12px;
+        font-size: 0.7rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        line-height: 1.2;
+        color: #ccc;
+      }
+
+      /* Content Block */
+      .content {
+        text-align: right;
+        max-width: 600px;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: all 0.8s ease-out;
+      }
+
+      .content.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .name {
+        font-size: clamp(3.5rem, 8vw, 6rem);
+        font-weight: 900;
+        line-height: 0.85;
+        text-transform: uppercase;
+        letter-spacing: -3px;
+        margin-bottom: 10px;
+      }
+
+      .role {
+        color: var(--accent);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 40px;
+        letter-spacing: 1px;
+      }
+
+      .bio-box {
+        border-right: 5px solid var(--accent);
+        padding-right: 25px;
+        display: inline-block;
+      }
+
+      .bio-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 400px;
+      }
+
+      /* Bottom Link */
+      .site-footer {
+        position: absolute;
+        bottom: 40px;
+        left: 60px;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+      }
+
+      @media (max-width: 768px) {
+        .hero-container {
+          justify-content: center;
+          padding-right: 0;
+        }
+        .content {
+          text-align: center;
+          padding: 20px;
+        }
+        .bio-box {
+          border-right: none;
+          border-bottom: 5px solid var(--accent);
+          padding: 0 0 20px 0;
+        }
+        .brand-logo {
+          right: 20px;
+        }
+        .site-footer {
+          left: 20px;
+          width: 100%;
+          text-align: center;
+        }
+      }
+      .contact-section {
+        background: #111;
+        color: #fff;
+        text-align: center;
+        padding: 20px 10px;
+      }
+
+      .contact-section h2 {
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+
+      .contact-section p {
+        font-size: 1rem;
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero-container">
+      <main class="content" id="profileContent">
+        <h1 class="name">James<br />Smith</h1>
+        <p class="role">Co-Founder & Head of Product</p>
+
+        <div class="bio-box">
+          <p class="bio-text">
+            James leads product vision and development, focusing on high-impact
+            campaigns, brand identity, and intuitive user experiences.
+            Passionate about building technologies that drive real results.
+          </p>
+        </div>
+      </main>
+
+      <a href="#" class="site-footer">reallygreatsite.com</a>
+    </div>
+
+    <script>
+      // Trigger reveal on load
+      window.addEventListener("DOMContentLoaded", () => {
+        const content = document.getElementById("profileContent");
+        setTimeout(() => {
+          content.classList.add("show");
+        }, 150);
+      });
+    </script>
+  </body>
+  <footer class="contact-section">
+    <h2>Contact</h2>
+    <p>Email: james.smith@example.com</p>
+    <p>Phone: (123) 456-7890</p>
+    <p>Location: San Francisco, CA</p>
+  </footer>
+</html>

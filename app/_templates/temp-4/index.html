@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robert Dawson | Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #000000;
+        --text-main: #ffffff;
+        --text-muted: #999999;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Full-screen lock */
+      html,
+      body {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background-color: var(--bg-color);
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-main);
+        font-family: "Inter", sans-serif;
+      }
+
+      .container {
+        width: 90vw;
+        max-width: 1200px;
+        height: 85vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      /* Layout Grid */
+      .layout-grid {
+        display: flex;
+        gap: 50px;
+        height: 60%;
+        align-items: stretch;
+      }
+
+      .image-box {
+        flex: 2;
+        height: 100%;
+      }
+
+      .image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: grayscale(100%);
+      }
+
+      .side-label {
+        flex: 0.4;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        color: var(--text-muted);
+        border-left: 1px solid #333;
+        padding: 20px 0 0 25px;
+        line-height: 1.6;
+      }
+
+      /* Bottom Row Styling */
+      .bottom-row {
+        height: 30%;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding-bottom: 2vh;
+      }
+
+      .name-title h1 {
+        font-size: clamp(60px, 9vw, 130px);
+        line-height: 0.85;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+        font-weight: 700;
+      }
+
+      .bio-info {
+        max-width: 320px;
+        margin-bottom: 10px;
+      }
+
+      .badge {
+        display: inline-block;
+        background: #fff;
+        color: #000;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 11px;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+      }
+
+      .bio-text {
+        font-size: 15px; /* Bumped up */
+        line-height: 1.5;
+        color: #ddd;
+        font-weight: 400;
+      }
+
+      /* Contact Font Fix */
+      .contact-details {
+        text-align: right;
+        font-size: 16px; /* High legibility */
+        font-weight: 600; /* Semi-bold for punch */
+        color: var(--text-main);
+        line-height: 1.8;
+        margin-bottom: 10px;
+      }
+
+      .contact-details span {
+        color: var(--text-muted);
+        font-weight: 400;
+        display: block;
+      }
+
+      /* Entry Animation */
+      .container {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .layout-grid {
+          flex-direction: column;
+          height: 50%;
+        }
+        .side-label {
+          display: none;
+        }
+        .bottom-row {
+          flex-direction: column;
+          align-items: flex-start;
+          height: 40%;
+        }
+        .contact-details {
+          text-align: left;
+          font-size: 14px;
+        }
+        .name-title h1 {
+          font-size: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="layout-grid">
+        <div class="image-box">
+          <img
+            src="https://images.unsplash.com/photo-1552058544-f2b08422138a?auto=format&fit=crop&q=80&w=1000"
+            alt="Robert Dawson"
+          />
+        </div>
+        <div class="side-label">Personal<br />Profile</div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="name-title">
+          <h1>Robert<br />Dawson</h1>
+        </div>
+
+        <div class="bio-info">
+          <div class="badge">Digital Marketing Expert</div>
+          <p class="bio-text">
+            Robert Dawson is a Digital Marketing Expert who has experience in
+            various companies around the world.
+          </p>
+        </div>
+
+        <div class="contact-details">
+          + 123-456-7890<br />
+          <span>reallygreatsite.com</span>
+          <span>hello@reallygreatsite.com</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

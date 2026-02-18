@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FileText,
   Bot,
@@ -17,17 +17,21 @@ import {
   LogOut,
   Pencil,
   MessageCircle,
-} from 'lucide-react';
-import { renderProfile } from '../lib/default-content';
-import { useProfileStore } from '../lib/store';
-import { extractProfileFromLinkedIn, getAiChatResponse, polishProfileData } from '../lib/groq';
-import { SECTIONS, computeSectionProgress } from '../lib/ai-prompt';
-import EditProfileForm from '../components/EditProfileForm';
-import GuidedReviewOverlay from '../components/GuidedReviewOverlay';
-import AuthModal from '../components/AuthModal';
-import { supabase } from '../lib/supabase';
-import { loadProfile, saveProfile, markLinkedinImported } from '../lib/db';
-import { ProfileData } from '../lib/schema';
+} from "lucide-react";
+import { renderProfile } from "../lib/default-content";
+import { useProfileStore } from "../lib/store";
+import {
+  extractProfileFromLinkedIn,
+  getAiChatResponse,
+  polishProfileData,
+} from "../lib/groq";
+import { SECTIONS, computeSectionProgress } from "../lib/ai-prompt";
+import EditProfileForm from "../components/EditProfileForm";
+import GuidedReviewOverlay from "../components/GuidedReviewOverlay";
+import AuthModal from "../components/AuthModal";
+import { supabase } from "../lib/supabase";
+import { loadProfile, saveProfile, markLinkedinImported } from "../lib/db";
+import { ProfileData } from "../lib/schema";
 
 export default function Home() {
   const {
@@ -58,20 +62,23 @@ export default function Home() {
     setShowGuidedReview,
   } = useProfileStore();
 
-  const [userInput, setUserInput] = useState('');
+  const [userInput, setUserInput] = useState("");
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [profileHtml, setProfileHtml] = useState('');
+  const [profileHtml, setProfileHtml] = useState("");
 
   // LinkedIn Modal State — start hidden until we know if user needs it
   const [showLinkedinModal, setShowLinkedinModal] = useState(false);
-  const [linkedinUrl, setLinkedinUrl] = useState('');
-  const [scrapeStatus, setScrapeStatus] = useState<'idle' | 'loading' | 'success' | 'processing' | 'error'>('idle');
-  const [scrapeMessage, setScrapeMessage] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [scrapeStatus, setScrapeStatus] = useState<
+    "idle" | "loading" | "success" | "processing" | "error"
+  >("idle");
+  const [scrapeMessage, setScrapeMessage] = useState("");
 
   // Edit Form State
   const [showEditForm, setShowEditForm] = useState(false);
-  const [tempProfileData, setTempProfileData] = useState<Partial<ProfileData> | null>(null);
+  const [tempProfileData, setTempProfileData] =
+    useState<Partial<ProfileData> | null>(null);
   const [isPolishing, setIsPolishing] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -111,7 +118,8 @@ export default function Home() {
   // Auto-scroll to bottom of chat
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
 
@@ -147,7 +155,9 @@ export default function Home() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const prevUser = useProfileStore.getState().user;
       setUser(session?.user ?? null);
       // Load profile when user just logged in (wasn't logged in before)
@@ -185,14 +195,17 @@ export default function Home() {
   }, [profileData, user, profileLoaded]);
 
   // Helper: require auth before an action
-  const requireAuth = useCallback((action: () => void): boolean => {
-    if (!user) {
-      setPendingAction(() => action);
-      setShowAuthModal(true);
-      return false; // not authed
-    }
-    return true; // authed
-  }, [user, setPendingAction, setShowAuthModal]);
+  const requireAuth = useCallback(
+    (action: () => void): boolean => {
+      if (!user) {
+        setPendingAction(() => action);
+        setShowAuthModal(true);
+        return false; // not authed
+      }
+      return true; // authed
+    },
+    [user, setPendingAction, setShowAuthModal],
+  );
 
   const isValidLinkedinUrl = (url: string) => {
     return /^https?:\/\/(www\.)?linkedin\.com\/in\/[\w-]+\/?$/.test(url.trim());
@@ -203,49 +216,61 @@ export default function Home() {
     if (isOnCooldown()) return;
 
     if (!isValidLinkedinUrl(linkedinUrl)) {
-      setScrapeStatus('error');
-      setScrapeMessage('Please enter a valid LinkedIn URL (e.g. https://www.linkedin.com/in/username/)');
+      setScrapeStatus("error");
+      setScrapeMessage(
+        "Please enter a valid LinkedIn URL (e.g. https://www.linkedin.com/in/username/)",
+      );
       return;
     }
 
-    setScrapeStatus('loading');
-    setScrapeMessage('');
+    setScrapeStatus("loading");
+    setScrapeMessage("");
 
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_SCRAPER_URL || 'http://localhost:8000/scrape', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ linkedin_url: linkedinUrl.trim() }),
-      });
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_SCRAPER_URL || "http://localhost:8000/scrape",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ linkedin_url: linkedinUrl.trim() }),
+        },
+      );
 
       if (res.ok) {
         const rawData = await res.json();
-        setScrapeStatus('processing');
-        setScrapeMessage('Profile scraped! Analyzing with AI...');
+        setScrapeStatus("processing");
+        setScrapeMessage("Profile scraped! Analyzing with AI...");
 
         const extractedData = await extractProfileFromLinkedIn(rawData);
         setTempProfileData(extractedData);
 
-        setScrapeStatus('success');
-        setScrapeMessage('All done! Opening editor...');
+        setScrapeStatus("success");
+        setScrapeMessage("All done! Opening editor...");
 
         // Mark LinkedIn as imported in DB
         if (user) markLinkedinImported(user.id);
         setHasCompletedLinkedIn(true);
 
-        // Brief delay for success message visibility
+        // Brief delay for success message visibility, then skip straight
+        // to polish + guided review (no need for the edit form)
         setTimeout(() => {
           setShowLinkedinModal(false);
-          setShowEditForm(true);
+          handleSaveEdit(extractedData);
         }, 800);
       } else {
         const data = await res.json().catch(() => null);
-        setScrapeStatus('error');
-        setScrapeMessage(data?.detail || data?.message || `Request failed with status ${res.status}`);
+        setScrapeStatus("error");
+        setScrapeMessage(
+          data?.detail ||
+            data?.message ||
+            `Request failed with status ${res.status}`,
+        );
       }
     } catch {
-      setScrapeStatus('error');
-      setScrapeMessage('Could not connect to the scraper server. Make sure the backend is running on port 8000.');
+      setScrapeStatus("error");
+      setScrapeMessage(
+        "Could not connect to the scraper server. Make sure the backend is running on port 8000.",
+      );
     }
   };
 
@@ -279,8 +304,8 @@ export default function Home() {
   const handleGuidedReviewComplete = () => {
     setShowGuidedReview(false);
     addMessage({
-      text: `Great, your profile is looking solid! I can see your experience as ${profileData.professionalTitle || 'a professional'}. Let me help you refine this into a powerful professional profile.\n\nWhat would you like to work on first?`,
-      sender: 'bot',
+      text: `Great, your profile is looking solid! I can see your experience as ${profileData.professionalTitle || "a professional"}. Let me help you refine this into a powerful professional profile.\n\nWhat would you like to work on first?`,
+      sender: "bot",
       suggestedReplies: [
         "Help me write my About Me",
         "Let's craft my personal story",
@@ -291,17 +316,20 @@ export default function Home() {
 
   const sendMessage = async (text?: string) => {
     const messageText = text || userInput.trim();
-    if (messageText === '' || isTyping) return;
+    if (messageText === "" || isTyping) return;
     if (isOnCooldown()) return;
 
     if (!requireAuth(() => sendMessage(messageText))) return;
 
-    addMessage({ text: messageText, sender: 'user' });
-    setUserInput('');
+    addMessage({ text: messageText, sender: "user" });
+    setUserInput("");
     setIsTyping(true);
 
     try {
-      const allMessages = [...messages, { text: messageText, sender: 'user' as const }];
+      const allMessages = [
+        ...messages,
+        { text: messageText, sender: "user" as const },
+      ];
       const result = await getAiChatResponse(allMessages, profileData);
 
       if (result.updatedData) {
@@ -314,28 +342,33 @@ export default function Home() {
 
       addMessage({
         text: result.text,
-        sender: 'bot',
+        sender: "bot",
         suggestedReplies: result.suggestedReplies,
       });
 
       // Update current section based on progress
       if (result.sectionProgress) {
-        const nextIncomplete = SECTIONS.find(s => (result.sectionProgress![s.id] ?? 0) < 100);
+        const nextIncomplete = SECTIONS.find(
+          (s) => (result.sectionProgress![s.id] ?? 0) < 100,
+        );
         if (nextIncomplete) {
           setCurrentSection(nextIncomplete.id);
         } else {
-          setCurrentSection('complete');
+          setCurrentSection("complete");
         }
       }
     } catch {
-      addMessage({ text: "I'm having a bit of trouble connecting. Could you try again?", sender: 'bot' });
+      addMessage({
+        text: "I'm having a bit of trouble connecting. Could you try again?",
+        sender: "bot",
+      });
     } finally {
       setIsTyping(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       sendMessage();
     }
   };
@@ -347,8 +380,8 @@ export default function Home() {
 
   const downloadPDF = async () => {
     setDownloading(true);
-    if (typeof window !== 'undefined') {
-      const element = document.getElementById('printableArea');
+    if (typeof window !== "undefined") {
+      const element = document.getElementById("printableArea");
       if (!element) {
         setDownloading(false);
         return;
@@ -358,20 +391,20 @@ export default function Home() {
       await document.fonts.ready;
 
       // ── Prepare element for clean PDF capture ──
-      element.classList.add('no-shadow');
+      element.classList.add("no-shadow");
 
       // Temporarily collapse min-height on the a4-page itself to prevent blank trailing page
       const prevMinHeight = element.style.minHeight;
       const prevOverflow = element.style.overflow;
-      element.style.minHeight = '0';
-      element.style.overflow = 'hidden';
+      element.style.minHeight = "0";
+      element.style.overflow = "hidden";
 
       try {
-        const html2pdf = (await import('html2pdf.js')).default;
+        const html2pdf = (await import("html2pdf.js")).default;
         const opt = {
           margin: 0,
-          filename: `${profileData.fullName || 'my'}-profile.pdf`,
-          image: { type: 'jpeg' as const, quality: 0.98 },
+          filename: `${profileData.fullName || "my"}-profile.pdf`,
+          image: { type: "jpeg" as const, quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
@@ -379,14 +412,26 @@ export default function Home() {
             letterRendering: true,
             scrollY: 0,
             scrollX: 0,
-            backgroundColor: '#ffffff',
+            backgroundColor: "#ffffff",
           },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const, compress: true },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as string[], before: '.pdf-page-break' },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait" as const,
+            compress: true,
+          },
+          pagebreak: {
+            mode: ["avoid-all", "css", "legacy"] as string[],
+            before: ".pdf-page-break",
+          },
         };
 
         // Generate PDF object first, then detect & remove blank trailing pages
-        const pdfObj = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+        const pdfObj = await html2pdf()
+          .set(opt)
+          .from(element)
+          .toPdf()
+          .get("pdf");
 
         const totalPages = pdfObj.internal.getNumberOfPages();
         // Check the last page — if it's effectively blank, remove it
@@ -398,12 +443,12 @@ export default function Home() {
           }
         }
 
-        pdfObj.save(`${profileData.fullName || 'my'}-profile.pdf`);
+        pdfObj.save(`${profileData.fullName || "my"}-profile.pdf`);
       } catch (error) {
-        console.error('PDF Download Error:', error);
+        console.error("PDF Download Error:", error);
       } finally {
         // Restore original styles
-        element.classList.remove('no-shadow');
+        element.classList.remove("no-shadow");
         element.style.minHeight = prevMinHeight;
         element.style.overflow = prevOverflow;
         setDownloading(false);
@@ -412,35 +457,45 @@ export default function Home() {
   };
 
   // Calculate overall progress
-  const overallProgress = SECTIONS.length > 0
-    ? Math.round(SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) / SECTIONS.length)
-    : 0;
+  const overallProgress =
+    SECTIONS.length > 0
+      ? Math.round(
+          SECTIONS.reduce((sum, s) => sum + (sectionProgress[s.id] ?? 0), 0) /
+            SECTIONS.length,
+        )
+      : 0;
 
   // Get last bot message suggested replies
-  const lastBotMessage = [...messages].reverse().find(m => m.sender === 'bot');
+  const lastBotMessage = [...messages]
+    .reverse()
+    .find((m) => m.sender === "bot");
   const currentSuggestedReplies = lastBotMessage?.suggestedReplies || [];
 
   return (
     <div className="bg-white text-slate-900 h-screen overflow-hidden flex selection:bg-[#01334c] selection:text-white font-[family-name:var(--font-inter)]">
-
       {/* LinkedIn URL Modal */}
       {showLinkedinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/20 w-full max-w-md mx-4 overflow-hidden border border-slate-100 animate-slide-up">
-
             {/* Header */}
             <div className="bg-gradient-to-br from-[#01334c] to-[#024466] px-8 py-8 text-center">
               <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 ring-4 ring-white/10 shadow-lg">
                 <Linkedin className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Import LinkedIn Profile</h2>
-              <p className="text-sm text-white/60 mt-1.5 font-medium">Paste your profile URL to get started</p>
+              <h2 className="text-xl font-bold text-white tracking-tight">
+                Import LinkedIn Profile
+              </h2>
+              <p className="text-sm text-white/60 mt-1.5 font-medium">
+                Paste your profile URL to get started
+              </p>
             </div>
 
             {/* Body */}
             <div className="px-8 py-8 space-y-5">
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">LinkedIn Profile URL</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">
+                  LinkedIn Profile URL
+                </label>
                 <div className="relative group">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <ExternalLink className="w-4 h-4 text-slate-400 group-focus-within:text-[#01334c] transition-colors" />
@@ -448,30 +503,40 @@ export default function Home() {
                   <input
                     type="url"
                     value={linkedinUrl}
-                    onChange={(e) => { setLinkedinUrl(e.target.value); if (scrapeStatus === 'error') setScrapeStatus('idle'); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && scrapeStatus !== 'loading') scrapeLinkedin(); }}
+                    onChange={(e) => {
+                      setLinkedinUrl(e.target.value);
+                      if (scrapeStatus === "error") setScrapeStatus("idle");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && scrapeStatus !== "loading")
+                        scrapeLinkedin();
+                    }}
                     placeholder="https://www.linkedin.com/in/username/"
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-11 pr-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#01334c]/20 focus:border-[#01334c] transition-all group-hover:bg-white group-hover:shadow-md"
                     autoFocus
-                    disabled={scrapeStatus === 'loading' || scrapeStatus === 'success'}
+                    disabled={
+                      scrapeStatus === "loading" || scrapeStatus === "success"
+                    }
                   />
                 </div>
               </div>
 
               {/* Status Message */}
-              {scrapeStatus === 'error' && (
+              {scrapeStatus === "error" && (
                 <div className="flex items-start gap-3 bg-red-50 border border-red-100 text-red-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
                   <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>{scrapeMessage}</span>
                 </div>
               )}
 
-              {(scrapeStatus === 'success' || scrapeStatus === 'processing') && (
+              {(scrapeStatus === "success" ||
+                scrapeStatus === "processing") && (
                 <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl px-4 py-3 animate-fade-in">
-                  {scrapeStatus === 'processing'
-                    ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
-                    : <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  }
+                  {scrapeStatus === "processing" ? (
+                    <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  )}
                   <span className="font-medium">{scrapeMessage}</span>
                 </div>
               )}
@@ -480,20 +545,25 @@ export default function Home() {
               <div className="space-y-3 pt-1">
                 <button
                   onClick={scrapeLinkedin}
-                  disabled={scrapeStatus === 'loading' || scrapeStatus === 'processing' || scrapeStatus === 'success' || !linkedinUrl.trim()}
+                  disabled={
+                    scrapeStatus === "loading" ||
+                    scrapeStatus === "processing" ||
+                    scrapeStatus === "success" ||
+                    !linkedinUrl.trim()
+                  }
                   className="w-full py-3.5 rounded-xl bg-[#01334c] hover:bg-[#024466] disabled:opacity-50 disabled:hover:bg-[#01334c] text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-[#01334c]/20 hover:shadow-[#01334c]/40 active:scale-[0.98] flex items-center justify-center gap-2.5"
                 >
-                  {scrapeStatus === 'loading' ? (
+                  {scrapeStatus === "loading" ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Scraping Profile...</span>
                     </>
-                  ) : scrapeStatus === 'processing' ? (
+                  ) : scrapeStatus === "processing" ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Analyzing with AI...</span>
                     </>
-                  ) : scrapeStatus === 'success' ? (
+                  ) : scrapeStatus === "success" ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Ready!</span>
@@ -516,7 +586,7 @@ export default function Home() {
                     if (!requireAuth(doSkip)) return;
                     doSkip();
                   }}
-                  disabled={scrapeStatus === 'loading'}
+                  disabled={scrapeStatus === "loading"}
                   className="w-full py-2.5 rounded-xl text-slate-400 hover:text-slate-600 text-xs font-medium transition-colors disabled:opacity-50"
                 >
                   Skip — I&apos;ll build from scratch
@@ -528,8 +598,9 @@ export default function Home() {
       )}
 
       {/* Sidebar / Chat Interface */}
-      <aside className={`w-[420px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white relative z-20 shadow-xl shadow-slate-200/50 transition-all duration-300 ${showGuidedReview ? 'hidden' : ''}`}>
-
+      <aside
+        className={`w-[420px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white relative z-20 shadow-xl shadow-slate-200/50 transition-all duration-300 ${showGuidedReview ? "hidden" : ""}`}
+      >
         {/* Chat Header */}
         <div className="h-20 flex items-center px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center gap-3 flex-1">
@@ -537,9 +608,13 @@ export default function Home() {
               <FileText className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="font-bold text-lg text-[#01334c] tracking-tight">ProfileArchitect</h1>
+              <h1 className="font-bold text-lg text-[#01334c] tracking-tight">
+                ProfileArchitect
+              </h1>
               <div className="flex items-center gap-2">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">AI Workspace</p>
+                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+                  AI Workspace
+                </p>
                 {isSaving && (
                   <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
                     <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
@@ -551,15 +626,18 @@ export default function Home() {
           </div>
           <button
             onClick={() => {
-              if (!requireAuth(() => {
-                setLinkedinUrl('');
-                setScrapeStatus('idle');
-                setScrapeMessage('');
-                setShowLinkedinModal(true);
-              })) return;
-              setLinkedinUrl('');
-              setScrapeStatus('idle');
-              setScrapeMessage('');
+              if (
+                !requireAuth(() => {
+                  setLinkedinUrl("");
+                  setScrapeStatus("idle");
+                  setScrapeMessage("");
+                  setShowLinkedinModal(true);
+                })
+              )
+                return;
+              setLinkedinUrl("");
+              setScrapeStatus("idle");
+              setScrapeMessage("");
               setShowLinkedinModal(true);
             }}
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#0077b5] bg-[#0077b5]/5 hover:bg-[#0077b5]/10 border border-[#0077b5]/20 transition-all duration-200 hover:shadow-sm active:scale-95"
@@ -584,8 +662,12 @@ export default function Home() {
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-[#01334c]" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Profile Progress</span>
-            <span className="ml-auto text-xs font-bold text-[#01334c]">{overallProgress}%</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Profile Progress
+            </span>
+            <span className="ml-auto text-xs font-bold text-[#01334c]">
+              {overallProgress}%
+            </span>
           </div>
           {/* Overall progress bar */}
           <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-3">
@@ -604,18 +686,19 @@ export default function Home() {
                 <div
                   key={section.id}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all duration-300 cursor-default flex items-center gap-1
-                    ${isComplete
-                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                      : isActive
-                        ? 'bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20'
-                        : progress > 0
-                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                          : 'bg-slate-100 text-slate-400 border border-slate-200'
+                    ${
+                      isComplete
+                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                        : isActive
+                          ? "bg-[#01334c] text-white shadow-sm shadow-[#01334c]/20"
+                          : progress > 0
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-slate-100 text-slate-400 border border-slate-200"
                     }`}
                   title={`${section.label}: ${progress}%`}
                 >
                   {isComplete && <CheckCircle2 className="w-3 h-3" />}
-                  <span>{section.label.split(' ')[0]}</span>
+                  <span>{section.label.split(" ")[0]}</span>
                 </div>
               );
             })}
@@ -623,14 +706,24 @@ export default function Home() {
         </div>
 
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-hide" id="chatContainer" ref={chatContainerRef}>
+        <div
+          className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-hide"
+          id="chatContainer"
+          ref={chatContainerRef}
+        >
           {messages.map((msg, index) => (
-            <div key={index} className={`flex gap-3 group ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+            <div
+              key={index}
+              className={`flex gap-3 group ${msg.sender === "user" ? "flex-row-reverse" : ""}`}
+            >
               <div
-                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${msg.sender === 'user' ? 'bg-[#01334c] ring-4 ring-[#01334c]/10' : 'bg-slate-50 border border-slate-100'
-                  }`}
+                className={`w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-110 ${
+                  msg.sender === "user"
+                    ? "bg-[#01334c] ring-4 ring-[#01334c]/10"
+                    : "bg-slate-50 border border-slate-100"
+                }`}
               >
-                {msg.sender === 'user' ? (
+                {msg.sender === "user" ? (
                   <User className="w-4 h-4 text-white" />
                 ) : (
                   <Bot className="w-4 h-4 text-[#01334c]" />
@@ -638,28 +731,33 @@ export default function Home() {
               </div>
               <div className="space-y-2 max-w-[290px]">
                 <div
-                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${msg.sender === 'user'
-                    ? 'bg-[#01334c] text-white rounded-tr-none shadow-[#01334c]/20'
-                    : 'bg-slate-50 border border-slate-100 text-slate-600 rounded-tl-none'
-                    }`}
+                  className={`px-5 py-3.5 rounded-3xl text-[14px] leading-relaxed shadow-sm ${
+                    msg.sender === "user"
+                      ? "bg-[#01334c] text-white rounded-tr-none shadow-[#01334c]/20"
+                      : "bg-slate-50 border border-slate-100 text-slate-600 rounded-tl-none"
+                  }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
 
                 {/* Quick Reply Buttons (only on the last bot message) */}
-                {msg.sender === 'bot' && index === messages.length - 1 && msg.suggestedReplies && msg.suggestedReplies.length > 0 && !isTyping && (
-                  <div className="flex flex-wrap gap-1.5 pt-1 animate-fade-in">
-                    {msg.suggestedReplies.map((reply, rIdx) => (
-                      <button
-                        key={rIdx}
-                        onClick={() => handleQuickReply(reply)}
-                        className="px-3.5 py-2 rounded-2xl text-[12px] font-medium bg-white border border-slate-200 text-[#01334c] hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
-                      >
-                        {reply}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                {msg.sender === "bot" &&
+                  index === messages.length - 1 &&
+                  msg.suggestedReplies &&
+                  msg.suggestedReplies.length > 0 &&
+                  !isTyping && (
+                    <div className="flex flex-wrap gap-1.5 pt-1 animate-fade-in">
+                      {msg.suggestedReplies.map((reply, rIdx) => (
+                        <button
+                          key={rIdx}
+                          onClick={() => handleQuickReply(reply)}
+                          className="px-3.5 py-2 rounded-2xl text-[12px] font-medium bg-white border border-slate-200 text-[#01334c] hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+                        >
+                          {reply}
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
             </div>
           ))}
@@ -737,7 +835,10 @@ export default function Home() {
         >
           <div className="relative">
             {/* Pulsing ring */}
-            <div className="absolute inset-0 rounded-full bg-[#01334c]/20 animate-ping" style={{ animationDuration: '2s' }} />
+            <div
+              className="absolute inset-0 rounded-full bg-[#01334c]/20 animate-ping"
+              style={{ animationDuration: "2s" }}
+            />
             {/* Button */}
             <div className="relative w-14 h-14 rounded-full bg-[#01334c] shadow-xl shadow-[#01334c]/30 flex items-center justify-center text-white hover:bg-[#024466] hover:scale-110 active:scale-95 transition-all duration-200 ring-4 ring-white">
               <MessageCircle className="w-6 h-6" />
@@ -754,16 +855,21 @@ export default function Home() {
       {showAuthModal && <AuthModal />}
 
       {/* Main Preview Area */}
-      <main className={`flex-1 flex flex-col bg-slate-50/50 relative h-full transition-all duration-300 ${showGuidedReview ? 'pr-[460px]' : ''}`}>
-
+      <main
+        className={`flex-1 flex flex-col bg-slate-50/50 relative h-full transition-all duration-300 ${showGuidedReview ? "pr-[460px]" : ""}`}
+      >
         <div className="h-20 flex-shrink-0 flex items-center justify-between px-8 border-b border-slate-200/60 bg-white/80 backdrop-blur z-30">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2.5 text-slate-500 bg-slate-100/50 px-3 py-1.5 rounded-lg border border-slate-200/50">
               <File className="w-4 h-4 text-[#01334c]" />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#01334c]">Preview</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#01334c]">
+                Preview
+              </span>
             </div>
             <div className="h-5 w-px bg-slate-200"></div>
-            <span className="text-xs font-medium text-slate-500">A4 Document • Portrait</span>
+            <span className="text-xs font-medium text-slate-500">
+              A4 Document • Portrait
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -793,17 +899,24 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-10 md:p-16 relative" id="docScrollArea">
-
+        <div
+          className="flex-1 overflow-y-auto p-10 md:p-16 relative"
+          id="docScrollArea"
+        >
           {/* Subtle Grid Background */}
-          <div className="absolute inset-0 z-0 opacity-[0.4]" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+          <div
+            className="absolute inset-0 z-0 opacity-[0.4]"
+            style={{
+              backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)",
+              backgroundSize: "32px 32px",
+            }}
+          ></div>
 
           <div
             id="printableArea"
-            className={`a4-page relative z-10 transition-all duration-700 ease-out transform origin-top ${loadingPreview ? 'blur-sm scale-[0.99] opacity-90' : 'blur-0 scale-100 opacity-100'} shadow-2xl shadow-slate-200`}
+            className={`a4-page relative z-10 transition-all duration-700 ease-out transform origin-top ${loadingPreview ? "blur-sm scale-[0.99] opacity-90" : "blur-0 scale-100 opacity-100"} shadow-2xl shadow-slate-200`}
             dangerouslySetInnerHTML={{ __html: profileHtml }}
-          >
-          </div>
+          ></div>
 
           <div className="h-20"></div>
         </div>

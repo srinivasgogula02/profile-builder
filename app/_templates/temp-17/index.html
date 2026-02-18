@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Richard Sanchez - Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* RESET & BASE STYLES */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #050505; /* Outer background */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: "Montserrat", sans-serif;
+        color: #ffffff;
+      }
+
+      /* MAIN CARD CONTAINER */
+      .profile-card {
+        position: relative;
+        width: 100%;
+        max-width: 900px; /* Limits width to replicate screenshot scale */
+        background-color: #121212; /* Main card bg */
+        padding: 60px;
+        overflow: hidden;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+      }
+
+      /* DECORATIVE BARCODES (Top Right & Bottom Left) */
+      .barcode {
+        position: absolute;
+        display: flex;
+        gap: 8px;
+        height: 30px;
+      }
+      .barcode span {
+        display: block;
+        width: 8px;
+        background-color: #551abb;
+        height: 100%;
+      }
+      .barcode.top-right {
+        top: 0;
+        right: 40px;
+      }
+      .barcode.top-right span:nth-child(even) {
+        height: 60%;
+        margin-top: 0;
+      }
+
+      .barcode.bottom-left {
+        bottom: 0;
+        left: 40px;
+      }
+      /* Create the staggering effect seen in image */
+      .barcode span:nth-child(1) {
+        height: 100%;
+      }
+      .barcode span:nth-child(2) {
+        height: 60%;
+        margin-top: auto;
+      }
+      .barcode span:nth-child(3) {
+        height: 100%;
+      }
+      .barcode span:nth-child(4) {
+        height: 40%;
+        margin-top: auto;
+      }
+      .barcode span:nth-child(5) {
+        height: 80%;
+      }
+
+      /* TOP & BOTTOM NAVIGATION ROW */
+      .nav-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #e0e0e0;
+        margin-bottom: 50px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .separator {
+        color: #6a00ff; /* Purple accent */
+        font-weight: bold;
+        font-size: 1.2rem;
+        line-height: 0;
+      }
+
+      /* HERO SECTION (Name & Bio) */
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 40px;
+      }
+
+      .name-container h1 {
+        font-size: 4rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: #ffffff;
+      }
+
+      .bio-container {
+        max-width: 320px;
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .role-badge {
+        background-color: #551abb;
+        color: white;
+        padding: 8px 24px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 2px;
+      }
+
+      .bio-text {
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #bbbbbb;
+      }
+
+      /* INFO BAR (Dark Purple/Brown Strip) */
+      .info-bar {
+        background-color: #2d262d; /* Desaturated purple-brown */
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0; /* Flush with image */
+      }
+
+      .company-name {
+        font-weight: 700;
+        font-size: 1.1rem;
+        line-height: 1.2;
+      }
+      .company-name span {
+        color: #888;
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 2px;
+      }
+      .highlight-arrow {
+        color: #6a00ff;
+        font-weight: bold;
+      }
+
+      .contact-info {
+        font-size: 0.8rem;
+        color: #ddd;
+      }
+      .contact-info strong {
+        display: block;
+        color: #aaa;
+        font-weight: 400;
+        margin-bottom: 4px;
+      }
+
+      .cta-button {
+        background-color: #6a00ff;
+        border: none;
+        width: 45px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .cta-button:hover {
+        background-color: #5500cc;
+      }
+      .cta-button svg {
+        fill: white;
+        width: 16px;
+      }
+
+      /* MAIN IMAGE */
+      .image-container {
+        width: 100%;
+        height: 350px;
+        overflow: hidden;
+        position: relative;
+        background-color: #333;
+      }
+
+      .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top;
+        filter: grayscale(100%); /* Makes the image black and white */
+      }
+
+      /* FOOTER ROW */
+      .footer-row {
+        margin-top: 50px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #e0e0e0;
+      }
+
+      /* Responsive Tweaks */
+      @media (max-width: 850px) {
+        .profile-card {
+          padding: 30px;
+        }
+        .hero {
+          flex-direction: column;
+          gap: 20px;
+        }
+        .bio-container {
+          text-align: left;
+          align-items: flex-start;
+          max-width: 100%;
+        }
+        .info-bar {
+          flex-direction: column;
+          gap: 20px;
+          text-align: center;
+        }
+        .nav-row,
+        .footer-row {
+          display: none;
+        } /* Hide decoration on mobile for cleaner look */
+        .name-container h1 {
+          font-size: 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-card">
+      <div class="barcode top-right">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span>
+      </div>
+
+      <nav class="nav-row">
+        <div class="nav-item">MINIMALIST</div>
+        <span class="separator">+</span>
+        <div class="nav-item">CLEAN</div>
+        <span class="separator">+</span>
+        <div class="nav-item">SIMPLE</div>
+        <span class="separator">+</span>
+        <div class="nav-item">MODERN</div>
+      </nav>
+
+      <main class="hero">
+        <div class="name-container">
+          <h1>Richard<br />Sanchez</h1>
+        </div>
+
+        <div class="bio-container">
+          <div class="role-badge">
+            <span>✦</span> Marketing Analyst <span>✦</span>
+          </div>
+          <p class="bio-text">
+            Richard Sanchez is a Marketing Analyst who has experience in various
+            companies around the world since 2005.
+          </p>
+        </div>
+      </main>
+
+      <section class="info-bar">
+        <div class="company-name">
+          Max <span class="highlight-arrow">→</span><br />Corporation
+        </div>
+
+        <div class="contact-info">
+          <strong>Visit our website:</strong>
+          reallygreatsite.com
+        </div>
+
+        <div class="contact-info">
+          <strong>Contact us only at:</strong>
+          + 123-456-7890
+        </div>
+
+        <button class="cta-button">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
+            />
+          </svg>
+        </button>
+      </section>
+
+      <figure class="image-container">
+        <img
+          src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+          alt="Professional Portrait"
+        />
+      </figure>
+
+      <footer class="footer-row">
+        <div class="nav-item">COMPANY</div>
+        <span class="separator">✦</span>
+        <div class="nav-item">CORPORATE</div>
+        <span class="separator">✦</span>
+        <div class="nav-item">INSTITUTION</div>
+        <span class="separator">✦</span>
+        <div class="nav-item">AGENCY</div>
+      </footer>
+
+      <div class="barcode bottom-left">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <script>
+      // Simple script to handle interactivity if needed
+      document.querySelector(".cta-button").addEventListener("click", () => {
+        alert("Navigating to reallygreatsite.com...");
+      });
+    </script>
+  </body>
+</html>

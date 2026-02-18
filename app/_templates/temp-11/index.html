@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morgan Maxwell - Personal Profile</title>
+    <style>
+      /* --- RESET & BASE STYLES --- */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: #0a0a0a; /* Deep dark background */
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: #e0e0e0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      /* --- CARD CONTAINER --- */
+      .profile-card {
+        width: 100%;
+        max-width: 600px;
+        background-color: #121212;
+        border: 1px solid #333;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        /* Subtle fade-in animation */
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s ease-out forwards;
+      }
+
+      /* --- HEADER SECTION --- */
+      .header-strip {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #333;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: #ccc;
+      }
+
+      .header-title {
+        font-weight: 600;
+      }
+
+      /* --- MAIN CONTENT AREA --- */
+      .main-content {
+        padding: 40px 20px;
+        text-align: center;
+        position: relative;
+        /* Decorative side lines to mimic the blueprint look */
+        background-image:
+          linear-gradient(to bottom, #333 1px, transparent 1px),
+          linear-gradient(to bottom, #333 1px, transparent 1px);
+        background-size: 1px 100px;
+        background-position:
+          0 0,
+          100% 0;
+        background-repeat: no-repeat;
+      }
+
+      /* Decorative vertical lines on sides */
+      .main-content::before,
+      .main-content::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        width: 1px;
+        height: 150px;
+        background: #333;
+      }
+      .main-content::before {
+        left: 50px;
+      }
+      .main-content::after {
+        right: 50px;
+      }
+
+      /* --- IMAGE STYLING --- */
+      .image-container {
+        width: 280px;
+        height: 320px; /* Portrait ratio */
+        margin: 0 auto 40px auto;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #333;
+      }
+
+      .profile-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Makes the image black and white */
+        filter: grayscale(100%) contrast(1.1);
+        transition: filter 0.3s ease;
+      }
+
+      .profile-img:hover {
+        filter: grayscale(0%) contrast(1); /* Color on hover */
+      }
+
+      /* --- TEXT CONTENT --- */
+      .name-section {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 15px;
+        padding: 0 20px;
+      }
+
+      /* The little corner markers near the name */
+      .corner-mark {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-color: #e0e0e0;
+        border-style: solid;
+        top: 10px;
+      }
+
+      .corner-mark.left {
+        left: -10px;
+        border-width: 2px 0 0 2px;
+      }
+
+      .corner-mark.right {
+        right: -10px;
+        border-width: 2px 2px 0 0;
+      }
+
+      h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 0.95;
+        color: #eeeeee;
+        text-transform: uppercase;
+        letter-spacing: -1px;
+      }
+
+      .bio {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #888;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      /* --- FOOTER --- */
+      .footer-strip {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        border-top: 1px solid #333;
+        padding: 15px 0;
+        background-color: #161616;
+      }
+
+      .contact-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: #aaa;
+        cursor: pointer;
+        transition: color 0.2s;
+        position: relative;
+      }
+
+      .contact-item:hover {
+        color: #fff;
+      }
+
+      /* Vertical dividers in footer */
+      .contact-item:not(:last-child) {
+        border-right: 1px solid #333;
+      }
+
+      .icon {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      /* Tooltip for Copy Action */
+      .tooltip {
+        position: absolute;
+        bottom: 100%;
+        background: #fff;
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(10px);
+        transition: all 0.2s ease;
+      }
+
+      .tooltip.show {
+        opacity: 1;
+        transform: translateY(-5px);
+      }
+
+      /* --- ANIMATIONS --- */
+      @keyframes fadeInUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 500px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+        .footer-strip {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 20px 0;
+        }
+        .contact-item:not(:last-child) {
+          border-right: none;
+          border-bottom: 1px solid #333;
+          padding-bottom: 10px;
+        }
+        .main-content::before,
+        .main-content::after {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-card">
+      <header class="header-strip">
+        <span>2024</span>
+        <span class="header-title">MY PERSONAL PROFILE</span>
+        <span>2024</span>
+      </header>
+
+      <div class="main-content">
+        <div class="image-container">
+          <img
+            src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop"
+            alt="Morgan Maxwell"
+            class="profile-img"
+          />
+        </div>
+
+        <div class="text-content">
+          <div class="name-section">
+            <span class="corner-mark left"></span>
+            <h1>Morgan<br />Maxwell</h1>
+            <span class="corner-mark right"></span>
+          </div>
+          <p class="bio">
+            Morgan Maxwell is a Digital Marketing Manager who has experience in
+            various companies around the world since 2012
+          </p>
+        </div>
+      </div>
+
+      <footer class="footer-strip">
+        <div class="contact-item" onclick="copyText(this, '+123-456-7890')">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"
+            />
+          </svg>
+          <span>+123-456-7890</span>
+          <span class="tooltip">Copied!</span>
+        </div>
+
+        <div
+          class="contact-item"
+          onclick="copyText(this, 'reallygreatsite.com')"
+        >
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+            />
+          </svg>
+          <span>reallygreatsite.com</span>
+          <span class="tooltip">Copied!</span>
+        </div>
+
+        <div class="contact-item" onclick="copyText(this, '@reallygreatsite')">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"
+            />
+          </svg>
+          <span>@reallygreatsite</span>
+          <span class="tooltip">Copied!</span>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      function copyText(element, text) {
+        // Copy text to clipboard
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            // Find the tooltip inside the clicked element
+            const tooltip = element.querySelector(".tooltip");
+
+            // Show tooltip
+            tooltip.classList.add("show");
+
+            // Hide after 2 seconds
+            setTimeout(() => {
+              tooltip.classList.remove("show");
+            }, 2000);
+          })
+          .catch((err) => {
+            console.error("Failed to copy: ", err);
+          });
+      }
+    </script>
+  </body>
+</html>

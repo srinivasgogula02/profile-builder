@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CA Abhishek Boddu Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-blue: #2a3d8f;
+        --light-bg: #fffbf2;
+        --border-yellow: #fceec7;
+        --card-blue: #e3f2fd;
+        --card-green: #fafff0;
+        --card-orange: #fff2e0;
+        --text-main: #2c3e50;
+        --text-light: #5c7899;
+        --impact-blue: #1565c0;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        margin: 0;
+      }
+
+      .container {
+        width: 800px;
+        background-color: white;
+        padding: 30px;
+        margin-bottom: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      /* --- Header Section --- */
+      .header-section {
+        display: flex;
+        gap: 25px;
+        align-items: stretch;
+      }
+
+      .profile-wrapper {
+        flex: 0 0 320px;
+        background-color: #1a237e;
+        border-radius: 20px 20px 20px 20px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .profile-wrapper img {
+        height: 400px;
+        display: block;
+      }
+
+      .info-card {
+        flex: 1;
+        background-color: var(--light-bg);
+        border: 2px solid var(--border-yellow);
+        border-radius: 20px;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .info-card h1 {
+        color: var(--primary-blue);
+        margin: 0;
+        font-size: 38px;
+        font-weight: 700;
+      }
+
+      .info-card .subtitle {
+        color: var(--primary-blue);
+        font-size: 18px;
+        margin: 8px 0 15px 0;
+      }
+
+      .divider {
+        height: 2px;
+        background-color: var(--border-yellow);
+        margin-bottom: 15px;
+      }
+
+      .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+      }
+
+      .info-list li {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 8px;
+        color: var(--primary-blue);
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .info-list li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+
+      /* --- Social Links --- */
+      .social-links {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .social-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        transition: transform 0.2s;
+      }
+
+      .social-icon:hover {
+        transform: scale(1.1);
+      }
+
+      .website-url {
+        margin-left: auto;
+        color: var(--primary-blue);
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      /* --- Content Blocks --- */
+      .bio-box {
+        background-color: var(--card-blue);
+        border: 1px solid #bbdefb;
+        border-radius: 15px;
+        padding: 20px;
+        color: var(--text-light);
+        min-height: 300px;
+        margin-top: 25px;
+      }
+
+      .section-title {
+        text-align: center;
+        font-weight: 700;
+        font-size: 18px;
+        text-transform: uppercase;
+        margin-bottom: 25px;
+      }
+
+      /* --- Roles Grid --- */
+      .roles-container {
+        background-color: var(--card-green);
+        border: 1px solid #c5e1a5;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 25px;
+      }
+
+      .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        text-align: center;
+      }
+
+      .role-item img {
+        width: 50px;
+        margin-bottom: 10px;
+      }
+      .role-item h3 {
+        font-size: 16px;
+        color: #1b5e20;
+        margin: 5px 0;
+      }
+      .role-item p {
+        font-size: 13px;
+        color: #33691e;
+        line-height: 1.4;
+      }
+
+      /* --- Brands Section --- */
+      .brands-container {
+        background-color: var(--card-orange);
+        border: 1px solid #ffe0b2;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 25px;
+      }
+
+      .brand-logos {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-start;
+      }
+
+      .brand-item {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 10px;
+        color: white;
+        text-align: center;
+        border-radius: 5px;
+      }
+
+      /* --- Impact Section --- */
+      .impact-container {
+        background-color: var(--card-blue);
+        border: 1px solid #bbdefb;
+        border-radius: 15px;
+        padding: 25px;
+      }
+
+      .impact-item {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .impact-icon {
+        font-size: 24px;
+      }
+      .impact-text {
+        font-size: 15px;
+        color: var(--text-main);
+        line-height: 1.5;
+      }
+      .impact-text strong {
+        color: var(--impact-blue);
+      }
+      .impact-text span {
+        color: var(--impact-blue);
+        font-weight: 700;
+      }
+
+      /* --- Awards --- */
+      .awards-container {
+        background-color: var(--card-green);
+        border: 1px solid #c5e1a5;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 25px;
+      }
+
+      .awards-list li {
+        font-size: 15px;
+        color: #2e7d32;
+        margin-bottom: 10px;
+        list-style-type: none;
+        padding-left: 15px;
+        position: relative;
+      }
+
+      .awards-list li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+      }
+
+      /* --- Speaker Section --- */
+      .speaker-container {
+        border: 1px solid #ffe0b2;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 25px;
+      }
+
+      .speaker-logos {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .speaker-logos img {
+        max-width: 100%;
+      }
+
+      /* --- Footer --- */
+      .footer-text {
+        background-color: var(--card-orange);
+        border-radius: 15px;
+        padding: 20px;
+        color: #bf360c;
+        font-size: 14px;
+        text-align: center;
+        margin-top: 25px;
+      }
+
+      .contact-footer {
+        display: flex;
+        justify-content: space-around;
+        border: 2px solid #ce93d8;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 25px;
+        text-align: center;
+      }
+
+      .contact-unit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: #4a148c;
+        font-weight: 600;
+      }
+
+      .contact-unit img {
+        width: 28px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-section">
+        <div class="profile-wrapper">
+          <img src="./assets/profile.png" alt="CA Abhishek Boddu" />
+        </div>
+        <div class="info-card">
+          <h1>CA Abhishek Boddu</h1>
+          <p class="subtitle">Founder & CEO of OnEasy</p>
+          <div class="divider"></div>
+          <ul class="info-list">
+            <li>Virtual CFRO</li>
+            <li>Served 50+ brands across 10+ industries</li>
+            <li>Growth Trainer - GrowthClub</li>
+          </ul>
+          <div class="social-links">
+            <a href="#"
+              ><img
+                src="https://cdn-icons-png.flaticon.com/512/174/174857.png"
+                class="social-icon"
+            /></a>
+            <a href="#"
+              ><img
+                src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
+                class="social-icon"
+            /></a>
+            <a href="#"
+              ><img
+                src="https://cdn-icons-png.flaticon.com/512/733/733547.png"
+                class="social-icon"
+            /></a>
+            <a href="http://www.digitalconnect.in" class="website-url"
+              >www.digitalconnect.in</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="bio-box">writing all about abhishek boddu</div>
+
+      <div class="roles-container">
+        <div class="section-title" style="color: #33691e">
+          Key Roles and Expertise
+        </div>
+        <div class="roles-grid">
+          <div class="role-item">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/1998/1998087.png"
+            />
+            <h3>Digital Marketing</h3>
+            <p>
+              Helping Startups and Businesses to scale their digital presence
+            </p>
+          </div>
+          <div class="role-item">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/2620/2620667.png"
+            />
+            <h3>Branding & Consulting</h3>
+            <p>
+              Tailored PR and Branding Strategies to scale business across
+              online and offline
+            </p>
+          </div>
+          <div class="role-item">
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png"
+            />
+            <h3>GTM Strategies</h3>
+            <p>
+              Scaling strategies across industries. Automating Lead Generation
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="brands-container">
+        <div
+          class="section-title"
+          style="color: #bf360c; text-align: left; margin-left: 10px"
+        >
+          Brands Worked
+        </div>
+        <div class="brand-logos">
+          <div class="brand-item" style="background: #222; border-radius: 50%">
+            T WORKS
+          </div>
+          <div class="brand-item" style="background: #e53935">
+            STARTUP<br />utsav
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="impact-container">
+        <div class="section-title" style="color: #1565c0">
+          Impact and Outreach
+        </div>
+        <div class="impact-item">
+          <div class="impact-icon">👥</div>
+          <div class="impact-text">
+            <strong>Public Speaking & Training:</strong> Reached over
+            <span>40,000 individuals</span> through talks, digital marketing,
+            and literacy programs
+          </div>
+        </div>
+        <div class="impact-item">
+          <div class="impact-icon">🌐</div>
+          <div class="impact-text">
+            <strong>Manovignanayatra (2022):</strong> Traveled across 30
+            districts in AP & TS raising awareness about digital marketing,
+            self-employment, and Cyber Security
+            <span>(Impacting 50,000+ People)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="awards-container">
+        <div class="section-title" style="color: #33691e">
+          Awards and Recognition
+        </div>
+        <ul class="awards-list">
+          <li>
+            <strong>Pride of Hyderabad 2023:</strong> By Government of Telangana
+          </li>
+          <li>
+            <strong>Rashtriya Gaurav Award (2019):</strong> By Government of
+            Telangana
+          </li>
+          <li>
+            <strong>Swami Vivekananda Young Achiever Award (2019):</strong> By
+            CMR Group
+          </li>
+        </ul>
+      </div>
+
+      <div class="speaker-container">
+        <div class="section-title" style="color: #e65100">
+          Keynote Speaker / Sessions
+        </div>
+        <div class="speaker-logos">
+          <img src="./assets/speaker-at.png" />
+        </div>
+      </div>
+
+      <div class="footer-text">
+        With core expertise in Digital Marketing, Business Growth Strategies,
+        Digital PR, Partnerships and Synergies, and GTM Strategies, Nikeelu
+        Gunda remains a leading figure in the startup ecosystem.
+      </div>
+
+      <div class="contact-footer">
+        <div class="contact-unit">
+          <img src="https://cdn-icons-png.flaticon.com/512/159/159832.png" />
+          +91 79893 73839
+        </div>
+        <div class="contact-unit">
+          <img src="https://cdn-icons-png.flaticon.com/512/542/542689.png" />
+          nikeelu@digitalconnect.in
+        </div>
+        <div class="contact-unit">
+          <img src="https://cdn-icons-png.flaticon.com/512/1006/1006771.png" />
+          www.digitalconnect.in
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

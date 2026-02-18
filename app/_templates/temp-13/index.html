@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morgan Anderson Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:ital,wght@0,300;0,400;0,700;1,700&family=Oswald:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      /* Main Container - The "Poster" */
+      .profile-card {
+        position: relative;
+        width: 600px;
+        height: 800px;
+        background-color: #0c0c0c; /* Deep black/charcoal */
+        color: #ffffff;
+        overflow: hidden; /* Keeps content inside the rounded corners if needed */
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+      }
+
+      /* --- Layer 1: Top Navigation --- */
+      .top-nav {
+        position: absolute;
+        top: 40px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        z-index: 10;
+        font-family: "Montserrat", sans-serif;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        color: #ccc;
+        text-transform: uppercase;
+      }
+
+      .top-nav span {
+        margin: 0 15px;
+        position: relative;
+      }
+
+      /* The decorative dots */
+      .top-nav span:not(:last-child)::after {
+        content: "•";
+        position: absolute;
+        right: -20px;
+        color: #fff;
+      }
+
+      /* --- Layer 2: Background Text (MORGAN) --- */
+      .bg-text-morgan {
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Anton", sans-serif; /* Condensed bold font */
+        font-size: 13rem;
+        line-height: 1;
+        color: #ffffff;
+        z-index: 1; /* Lowest level, sits behind the image */
+        letter-spacing: -5px;
+        width: 100%;
+        text-align: center;
+        pointer-events: none;
+      }
+
+      /* --- Layer 3: The Person's Image --- */
+      .hero-image-container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        height: 85%;
+        z-index: 2; /* Sits ON TOP of 'MORGAN' but BEHIND bottom text */
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .hero-image {
+        /* IMPORTANT: For the real effect, use a PNG with a transparent background.
+               I am using a placeholder here. 
+            */
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+        /* Filter matches the dark, slightly desaturated vibe of the photo */
+        filter: contrast(1.1) brightness(0.9);
+      }
+
+      /* --- Layer 4: Side Text (ANDERSON) --- */
+      .side-text-anderson {
+        position: absolute;
+        top: 320px;
+        right: 20px;
+        font-family: "Oswald", sans-serif;
+        font-size: 4.5rem;
+        text-transform: uppercase;
+        color: #fff;
+        z-index: 1; /* Can be behind or beside the head depending on width */
+        letter-spacing: -1px;
+        line-height: 1;
+      }
+
+      /* --- Layer 5: Bottom Details --- */
+      .bottom-section {
+        position: absolute;
+        bottom: 40px;
+        left: 0;
+        width: 100%;
+        padding: 0 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        z-index: 10; /* Highest priority */
+      }
+
+      /* Bottom Left Content */
+      .left-content {
+        max-width: 45%;
+      }
+
+      .role-title {
+        font-family: "Oswald", sans-serif;
+        font-style: italic;
+        font-weight: 700;
+        font-size: 1.8rem;
+        line-height: 1;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+      }
+
+      .role-title span {
+        display: block;
+      }
+
+      .bio-text {
+        font-size: 0.65rem;
+        color: #aaa;
+        line-height: 1.4;
+        font-weight: 300;
+      }
+
+      /* Bottom Right Content */
+      .right-content {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .stars {
+        color: #fff;
+        font-size: 1.2rem;
+        letter-spacing: 5px;
+        margin-bottom: 5px;
+      }
+
+      .contact-info {
+        font-size: 0.65rem;
+        color: #ccc;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .contact-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .icon {
+        font-size: 0.8rem;
+      }
+
+      /* For responsive viewing on smaller screens */
+      @media (max-width: 650px) {
+        .profile-card {
+          width: 100%;
+          height: 100vh;
+          border-radius: 0;
+        }
+        .bg-text-morgan {
+          font-size: 18vw;
+          top: 80px;
+        }
+        .side-text-anderson {
+          font-size: 10vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="profile-card">
+      <div class="top-nav">
+        <span>Corporate</span>
+        <span>Personal</span>
+        <span>Profile</span>
+      </div>
+
+      <div class="bg-text-morgan">MORGAN</div>
+
+      <div class="hero-image-container">
+        <img
+          src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+          alt="Morgan Anderson"
+          class="hero-image"
+          style="
+            -webkit-mask-image: linear-gradient(
+              to bottom,
+              black 80%,
+              transparent 100%
+            );
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+          "
+        />
+      </div>
+
+      <div class="side-text-anderson">ANDERSON</div>
+
+      <div class="bottom-section">
+        <div class="left-content">
+          <div class="role-title">
+            <span>DIGITAL</span>
+            <span>MARKETER</span>
+          </div>
+          <p class="bio-text">
+            Morgan Anderson is a digital marketer who has experience in various
+            companies around the world since 2010.
+          </p>
+        </div>
+
+        <div class="right-content">
+          <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+
+          <div class="contact-info">
+            <div class="contact-row">
+              <span>+123-456-7890</span>
+              <span class="icon">📞</span>
+            </div>
+            <div class="contact-row">
+              <span>reallygreatsite.com</span>
+              <span class="icon">🌐</span>
+            </div>
+            <div class="contact-row">
+              <span>hello@reallygreatsite.com</span>
+              <span class="icon">@</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
