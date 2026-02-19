@@ -40,110 +40,122 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
         const iframe = iframeRef.current;
         if (!iframe) return;
 
+        // Skip if no content to render (avoids accessing null body on initial empty state)
+        if (!compiledHtml) return;
+
         const doc = iframe.contentDocument || iframe.contentWindow?.document;
         if (!doc) return;
 
-        doc.open();
-        doc.write(compiledHtml);
-        doc.close();
+        // Editor script as a string to inject directly
+        const editorScript = `
+            <style id="editor-style">
+                [contenteditable="true"] { outline: 1px dashed rgba(0,0,0,0.1); cursor: text; }
+                [contenteditable="true"]:focus { outline: 2px solid #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
+            </style>
+            <script id="editor-script">
+            (function() {
+                console.log("Editor script initialized via direct injection");
+                
+                document.body.addEventListener('click', (e) => {
+                    const target = e.target;
+                    
+                    if (target === document.body || target === document.documentElement) return;
+                    if (target.getAttribute('contenteditable') === 'true') return;
 
-        // Add visual editor script to the iframe
-        const script = doc.createElement('script');
-        script.textContent = `
-            document.body.addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.innerText && !target.hasAttribute('contenteditable')) {
-                     if(target.children.length === 0) {
-                        target.setAttribute('contenteditable', 'true');
-                        target.focus();
-                     }
-                }
-            });
+                    console.log("Activating edit mode for", target.tagName);
+                    target.setAttribute('contenteditable', 'true');
+                    target.focus();
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, true);
 
-            document.body.addEventListener('input', (e) => {
-                 window.parent.postMessage({ type: 'HTML_UPDATE', html: document.documentElement.outerHTML }, '*');
-            });
-            
-             // Disable links in editor to prevent navigation
-            document.querySelectorAll('a').forEach(a => {
-                a.addEventListener('click', (e) => e.preventDefault());
-            });
+                const sendUpdate = () => {
+                     // Clone to clean
+                     const clone = document.documentElement.cloneNode(true);
+                     
+                     // Remove our injected stuff
+                     const script = clone.querySelector('#editor-script');
+                     if(script) script.remove();
+                     const style = clone.querySelector('#editor-style');
+                     if(style) style.remove();
+                     
+                     // Remove html-to-image script if it exists
+                     const hti = clone.querySelector('script[src*="html-to-image"]');
+                     if(hti) hti.remove();
 
-            window.addEventListener('message', async (event) => {
-                const { type, format, fileName } = event.data;
-                if (type === 'GENERATE_DOWNLOAD') {
-                    try {
-                        // 1. Handle external stylesheets (Google Fonts etc) to avoid SecurityError
-                        // NUCLEAR OPTION: Fetch all styles, then wipe HEAD to ensure no cross-origin sheets remain.
-                        const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-                        let combinedCss = '';
-                        
-                        await Promise.all(links.map(async (link) => {
-                             try {
-                                 if (link.href && link.href.startsWith('http')) {
-                                     const res = await fetch(link.href);
-                                     if(res.ok) {
-                                         combinedCss += await res.text();
-                                         combinedCss += '\\n';
-                                     }
-                                 }
-                             } catch(e) {
-                                 console.warn("Failed to fetch style", link.href, e);
+                     window.parent.postMessage({ type: 'HTML_UPDATE', html: clone.outerHTML }, '*');
+                };
+
+                document.body.addEventListener('input', (e) => {
+                     sendUpdate();
+                });
+                
+                document.querySelectorAll('a').forEach(a => {
+                    a.addEventListener('click', (e) => e.preventDefault());
+                });
+
+                window.addEventListener('message', async (event) => {
+                    const { type, format, fileName } = event.data;
+                    if (type === 'GENERATE_DOWNLOAD') {
+                        try {
+                             const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+                             let combinedCss = '';
+                             
+                             await Promise.all(links.map(async (link) => {
+                                  try {
+                                      if (link.href && link.href.startsWith('http')) {
+                                          const res = await fetch(link.href);
+                                          if(res.ok) {
+                                              combinedCss += await res.text();
+                                              combinedCss += '\\n';
+                                          }
+                                      }
+                                  } catch(e) { console.warn("Style fetch error", e); }
+                             }));
+                             
+                             document.querySelectorAll('style').forEach(s => {
+                                 if (s.id !== 'editor-style') combinedCss += s.textContent + '\\n';
+                             });
+
+                             const editorStyle = document.getElementById('editor-style');
+                             if(editorStyle) editorStyle.remove();
+                             
+                             document.head.innerHTML = '';
+                             const style = document.createElement('style');
+                             style.textContent = combinedCss;
+                             document.head.appendChild(style);
+                             
+                             if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+
+                             if (format === 'png' || format === 'pdf') {
+                                 if (!window.htmlToImage) throw new Error("html-to-image not loaded");
+                                 const dataUrl = await window.htmlToImage.toPng(document.body, { 
+                                     quality: 1.0, pixelRatio: 2, skipFonts: true, skipOnError: true 
+                                 });
+                                 window.parent.postMessage({ type: 'DOWNLOAD_READY', format, dataUrl, fileName }, '*');
                              }
-                        }));
-                        
-                        // Also get existing style tags
-                        document.querySelectorAll('style').forEach(s => {
-                            combinedCss += s.textContent + '\\n';
-                        });
-
-                        // Wipe Head
-                        document.head.innerHTML = '';
-                        
-                        // Re-inject combined safe CSS
-                        const style = document.createElement('style');
-                        style.textContent = combinedCss;
-                        document.head.appendChild(style);
-                        
-                        // 2. Clear any selection/focus to avoid cursor in cursor
-                        if (document.activeElement instanceof HTMLElement) {
-                            document.activeElement.blur();
+                        } catch (err) {
+                             console.error("Generation failed", err);
+                             window.parent.postMessage({ type: 'DOWNLOAD_ERROR', error: String(err) }, '*');
                         }
-
-                        const element = document.body;
-                        const pixelRatio = 2; // High res
-
-                        if (format === 'png' || format === 'pdf') {
-                            // Ensure htmlToImage is loaded
-                            if (!window.htmlToImage) {
-                                throw new Error("Image generation library not loaded");
-                            }
-                            
-                            // skipFonts: true prevents reading cssRules from cross-origin sheets (avoids SecurityError)
-                            // We already inlined the CSS text manually above, which gives us the @font-face rules.
-                            // While we aren't base64-ing the WOFF files, this avoids the crash.
-                            const dataUrl = await window.htmlToImage.toPng(element, { 
-                                quality: 1.0, 
-                                pixelRatio: 2,
-                                skipFonts: true,
-                                skipOnError: true // Ignore failed images (CORS)
-                            });
-                            window.parent.postMessage({ type: 'DOWNLOAD_READY', format, dataUrl, fileName }, '*');
-                        }
-                    } catch (err) {
-                        console.error("Generation failed inside iframe", err);
-                        window.parent.postMessage({ type: 'DOWNLOAD_ERROR', error: err.toString() }, '*');
                     }
-                }
-            });
+                });
+            })();
+            </script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
         `;
-        doc.body.appendChild(script);
 
-        // Inject html-to-image from CDN
-        const htiScript = doc.createElement('script');
-        htiScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js';
-        htiScript.onload = () => console.log("html-to-image loaded in iframe");
-        doc.head.appendChild(htiScript);
+        let finalHtml = compiledHtml;
+        if (finalHtml.includes('</body>')) {
+            finalHtml = finalHtml.replace('</body>', editorScript + '</body>');
+        } else {
+            finalHtml += editorScript;
+        }
+
+        doc.open();
+        doc.write(finalHtml);
+        doc.close();
 
     }, [compiledHtml]);
 
