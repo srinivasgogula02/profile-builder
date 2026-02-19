@@ -45,7 +45,7 @@ export default function LiveTemplatePreview({ templateId }: LiveTemplatePreviewP
         fetchTemplate();
     }, [templateId]);
 
-    // Scaling Logic: Cover Mode
+    // Scaling Logic: Contain Mode
     useEffect(() => {
         const calculateScale = () => {
             if (!containerRef.current) return;
@@ -55,33 +55,20 @@ export default function LiveTemplatePreview({ templateId }: LiveTemplatePreviewP
             if (containerWidth === 0 || containerHeight === 0) return;
 
             // Calculate ratios
-            const ratioContainer = containerWidth / containerHeight;
-            const ratioTemplate = width / height;
-
-            let newScale;
-            // If container is wider than template (relative to aspect), scale by width
-            // If container is taller, scale by height
-            // To COVER: Use Math.max
             const scaleWid = containerWidth / width;
             const scaleHei = containerHeight / height;
-            newScale = Math.max(scaleWid, scaleHei);
 
-            // Center alignment logic
-            // We want to center the content within the container
-            // Since we transform-origin top-left, we need to translate.
+            // Use Math.min to CONTAIN the full template within the frame
+            const finalScale = Math.min(scaleWid, scaleHei);
 
-            const scaledWidth = width * newScale;
-            const scaledHeight = height * newScale;
+            const scaledWidth = width * finalScale;
+            const scaledHeight = height * finalScale;
 
             const xOffset = (containerWidth - scaledWidth) / 2;
-            const yOffset = (containerHeight - scaledHeight) / 2; // Center vertically too? or Top?
-            // Usually top is better for documents, but "fully filled" implies center crop often.
-            // Let's go with Top Center for documents so header is visible, unless it cuts off too much?
-            // "Fixed size fully filled" -> Thumbnail behavior. 
-            // Let's use Top Center. 
+            const yOffset = (containerHeight - scaledHeight) / 2;
 
             setStyle({
-                transform: `translate(${xOffset}px, 0px) scale(${newScale})`, // Top-Center
+                transform: `translate(${xOffset}px, ${yOffset}px) scale(${finalScale})`,
             });
         };
 
@@ -99,10 +86,11 @@ export default function LiveTemplatePreview({ templateId }: LiveTemplatePreviewP
     }, [width, height]);
 
     if (loading) return <div className="w-full h-full bg-slate-50 animate-pulse" />;
-    if (!html) return <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs">Unavailable</div>;
+    if (!html) return <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-400 text-xs">Unavailable</div>;
 
     return (
-        <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-slate-200 select-none">
+        // bg-white for transparent templates
+        <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-white select-none group-hover:shadow-sm transition-all">
             <div
                 style={{
                     width: `${width}px`,

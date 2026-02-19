@@ -61,7 +61,7 @@ export default function TemplatesPageClient() {
                                     }`}
                             >
                                 {/* Thumbnail / Preview */}
-                                <div className="aspect-[3/2] bg-slate-100 relative overflow-hidden group-hover:opacity-100 transition-opacity">
+                                <div className="aspect-[3/2] bg-white relative overflow-hidden group-hover:opacity-100 transition-opacity">
                                     <LiveTemplatePreview templateId={template.id} />
 
                                     <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-[#01334c]/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-8 z-20">
