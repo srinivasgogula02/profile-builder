@@ -12,6 +12,8 @@ export interface TemplateMeta {
         width: number;
         height: number;
     };
+    html?: string;
+    file?: string;
 }
 
 export const TEMPLATES: TemplateMeta[] = templatesData as TemplateMeta[];

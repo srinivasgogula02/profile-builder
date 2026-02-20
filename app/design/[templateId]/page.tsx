@@ -9,8 +9,11 @@ import DownloadOptions from '@/app/components/editor/DownloadOptions';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
+import { useAuthProtection } from '@/app/hooks/useAuthProtection';
+import { supabase } from '@/app/lib/supabase';
 
 export default function DesignEditorPage() {
+    const { isLoading: authLoading, isAuthorized } = useAuthProtection();
     const params = useParams();
     const router = useRouter();
     const templateId = params.templateId as string;
@@ -24,7 +27,7 @@ export default function DesignEditorPage() {
 
     // Load template content
     useEffect(() => {
-        if (!templateId) return;
+        if (!templateId || !isAuthorized) return;
 
         const loadTemplate = async () => {
             try {
@@ -64,14 +67,20 @@ export default function DesignEditorPage() {
         };
 
         loadTemplate();
-    }, [templateId, profileData]);
+    }, [templateId, profileData, isAuthorized]);
 
     const handleAiEdit = async (prompt: string) => {
         setIsGenerating(true);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const res = await fetch('/api/ai-edit', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     html: currentHtml, // Send the current state of HTML
                     prompt,
@@ -89,7 +98,10 @@ export default function DesignEditorPage() {
         }
     };
 
-    // Listen for download ready from iframe
+    // Listen for messages from iframe
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [templateImageId, setTemplateImageId] = useState<string | null>(null);
+
     useEffect(() => {
         const handler = async (event: MessageEvent) => {
             if (event.data.type === 'DOWNLOAD_READY') {
@@ -130,11 +142,43 @@ export default function DesignEditorPage() {
                 console.error("Download error from iframe:", event.data.error);
                 alert("Failed to generate file. Please try again.");
                 setIsGenerating(false);
+            } else if (event.data.type === 'IMAGE_CLICK') {
+                // Open file picker
+                setTemplateImageId(event.data.imageId);
+                if (fileInputRef.current) {
+                    fileInputRef.current.click();
+                }
+            } else if (event.data.type === 'DOWNLOAD_BLOCKED') {
+                alert("Please replace all default images with your own before downloading.");
+                setIsGenerating(false);
             }
         };
         window.addEventListener('message', handler);
         return () => window.removeEventListener('message', handler);
     }, []);
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !templateImageId) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64 = reader.result as string;
+            // Send back to iframe
+            const iframe = document.getElementById('template-preview-iframe') as HTMLIFrameElement;
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({
+                    type: 'REPLACE_IMAGE',
+                    imageId: templateImageId,
+                    newSrc: base64
+                }, '*');
+            }
+            // Clear input
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            setTemplateImageId(null);
+        };
+        reader.readAsDataURL(file);
+    };
 
     const handleDownload = async (format: 'html' | 'png' | 'pdf') => {
         setIsGenerating(true);
@@ -172,7 +216,7 @@ export default function DesignEditorPage() {
         }
     };
 
-    if (loading) {
+    if (authLoading || (isAuthorized && loading)) {
         return (
             <div className="h-screen flex items-center justify-center bg-slate-50 text-[#01334c]">
                 <div className="animate-pulse flex flex-col items-center gap-4">
@@ -182,6 +226,8 @@ export default function DesignEditorPage() {
             </div>
         );
     }
+
+    if (!isAuthorized) return null;
 
     return (
         <div className="h-screen flex flex-col bg-slate-50 overflow-hidden font-sans text-slate-900 selection:bg-[#01334c] selection:text-white">
@@ -231,8 +277,31 @@ export default function DesignEditorPage() {
                         width={templateMeta?.dimensions?.width}
                         height={templateMeta?.dimensions?.height}
                     />
+
+                    {/* Floating Action Button for Quick Image Upload */}
+                    <button
+                        onClick={() => {
+                            const iframe = document.getElementById('template-preview-iframe') as HTMLIFrameElement;
+                            if (iframe && iframe.contentWindow) {
+                                iframe.contentWindow.postMessage({ type: 'TRIGGER_PRIMARY_IMAGE_CLICK' }, '*');
+                            }
+                        }}
+                        className="absolute bottom-6 left-6 z-50 flex items-center gap-2 px-5 py-3 bg-[#01334c] text-white rounded-full shadow-lg hover:bg-[#024466] hover:scale-105 transition-all text-sm font-bold"
+                        title="Upload Photo"
+                    >
+                        <span>📷</span>
+                        <span>Upload Photo</span>
+                    </button>
                 </div>
             </div>
+            {/* Hidden File Input */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+            />
         </div>
     );
 }

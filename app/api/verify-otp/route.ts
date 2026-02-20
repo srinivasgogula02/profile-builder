@@ -60,65 +60,73 @@ export async function POST(req: NextRequest) {
 
         // ── Step 2: Shadow account login/signup in Supabase ──────────────
         const email = shadowEmail(mobile);
-        const password = shadowPassword(mobile);
 
-        // Try sign in first
-        const { data: signInData, error: signInError } =
-            await supabase.auth.signInWithPassword({ email, password });
+        // Generate a cryptographically strong random password for this session
+        const randomPassword = require('crypto').randomBytes(32).toString('hex') + 'A1!';
 
-        if (signInData?.session) {
-            return NextResponse.json({
-                success: true,
-                session: signInData.session,
-            });
-        }
+        // Create an admin client to securely manage the user
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
 
-        // Sign-in failed → sign up (new user)
-        const { data: signUpData, error: signUpError } =
-            await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        full_name: `Mobile User ${mobile}`,
-                        phone: mobile,
-                        is_mobile_user: true,
-                    },
-                },
-            });
+        // 1. Try to fetch existing user
+        const { data: { users }, error: fetchError } = await supabaseAdmin.auth.admin.listUsers();
+        let user = users?.find((u) => u.email === email);
 
-        if (signUpError) {
-            console.error("Shadow signup error:", signUpError);
-            return NextResponse.json(
-                { error: "Could not create your account. Please try again." },
-                { status: 500 },
+        if (user) {
+            // Update their password to the new random one
+            const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+                user.id,
+                { password: randomPassword }
             );
-        }
 
-        // With email confirmation disabled, signUp returns a session directly
-        if (signUpData?.session) {
-            return NextResponse.json({
-                success: true,
-                session: signUpData.session,
+            if (updateError) {
+                console.error("Failed to update shadow password:", updateError);
+                return NextResponse.json(
+                    { error: "Login failed during security update. Please try again." },
+                    { status: 500 },
+                );
+            }
+        } else {
+            // Create the user with the random password
+            const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+                email,
+                password: randomPassword,
+                email_confirm: true,
+                user_metadata: {
+                    full_name: `Mobile User ${mobile}`,
+                    phone: mobile,
+                    is_mobile_user: true,
+                }
             });
+
+            if (signUpError) {
+                console.error("Shadow signup error:", signUpError);
+                return NextResponse.json(
+                    { error: "Could not create your account. Please try again." },
+                    { status: 500 },
+                );
+            }
         }
 
-        // Edge case: signup succeeded but no session (shouldn't happen with
-        // email confirmation off). Try signing in immediately.
-        const { data: retryData, error: retryError } =
-            await supabase.auth.signInWithPassword({ email, password });
+        // 2. Now sign in through the client api to get a real session
+        const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password: randomPassword
+        });
 
-        if (retryError || !retryData?.session) {
-            console.error("Shadow retry login error:", retryError);
+        if (signInError || !sessionData?.session) {
+            console.error("Sign in with dynamic password failed:", signInError);
             return NextResponse.json(
-                { error: "Account created but login failed. Please try again." },
+                { error: "Login failed after verification. Please try again." },
                 { status: 500 },
             );
         }
 
         return NextResponse.json({
             success: true,
-            session: retryData.session,
+            session: sessionData.session,
         });
     } catch (err) {
         console.error("verify-otp error:", err);

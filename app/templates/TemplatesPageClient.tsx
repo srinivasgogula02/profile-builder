@@ -8,29 +8,35 @@ import { useRouter } from 'next/navigation';
 import LiveTemplatePreview from '@/app/components/templates/LiveTemplatePreview';
 import { supabase } from '@/app/lib/supabase';
 
+import { useAuthProtection } from '@/app/hooks/useAuthProtection';
+
 export default function TemplatesPageClient() {
+    const { isLoading, isAuthorized } = useAuthProtection();
     const { profileData, updateProfileField } = useProfileStore();
     const router = useRouter();
     const [templates, setTemplates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!isAuthorized) return; // Don't fetch if not authorized
         const fetchTemplates = async () => {
             const { data } = await supabase.from('templates').select('*').order('created_at', { ascending: false });
             if (data) setTemplates(data);
             setLoading(false);
         };
         fetchTemplates();
-    }, []);
+    }, [isAuthorized]);
 
     const handleSelectTemplate = (id: string) => {
         updateProfileField('selectedTemplate', id);
         router.push(`/design/${id}`);
     };
 
-    if (loading) {
+    if (isLoading || (isAuthorized && loading)) {
         return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-400">Loading gallery...</div>;
     }
+
+    if (!isAuthorized) return null; // Should redirect
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-[#01334c] selection:text-white">

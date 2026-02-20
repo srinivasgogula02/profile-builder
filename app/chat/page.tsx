@@ -1,5 +1,7 @@
 "use client";
 
+import DOMPurify from "isomorphic-dompurify";
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FileText,
@@ -1022,7 +1024,7 @@ export default function Home() {
           <div
             id="printableArea"
             className={`a4-page relative z-10 transition-all duration-700 ease-out transform origin-top ${loadingPreview ? "blur-sm scale-[0.99] opacity-90" : "blur-0 scale-100 opacity-100"} shadow-2xl shadow-slate-200`}
-            dangerouslySetInnerHTML={{ __html: profileHtml }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(profileHtml) }}
           ></div>
 
           <div className="h-20"></div>

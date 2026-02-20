@@ -1,8 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Simple in-memory rate limiter (Note: resets on Vercel cold starts)
+const rateLimitMap = new Map<string, { count: number, lastSent: number }>();
+const MAX_ATTEMPTS = 3;
+const WINDOW_MS = 60 * 1000; // 1 minute
+
 export async function POST(req: NextRequest) {
     try {
         const { mobile } = await req.json();
+
+        // Rate limiting check
+        // Get IP. Fallback to a default if running locally without proxies
+        const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+        const key = `${ip}-${mobile}`;
+
+        const now = Date.now();
+        const record = rateLimitMap.get(key) || { count: 0, lastSent: now };
+
+        // Reset count if window has passed
+        if (now - record.lastSent > WINDOW_MS) {
+            record.count = 1;
+        } else {
+            record.count += 1;
+        }
+
+        record.lastSent = now;
+        rateLimitMap.set(key, record);
+
+        if (record.count > MAX_ATTEMPTS) {
+            return NextResponse.json(
+                { error: "Too many requests. Please try again in a minute." },
+                { status: 429 }
+            );
+        }
 
         // Validate: exactly 10 digits
         if (!mobile || !/^\d{10}$/.test(mobile)) {

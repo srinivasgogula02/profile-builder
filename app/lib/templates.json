@@ -13,7 +13,8 @@
         "dimensions": {
             "width": 794,
             "height": 1123
-        }
+        },
+        "html": "<div style='padding: 40px; font-family: sans-serif; color: #333;'><h1>{{fullName}}</h1><p>{{tagline}}</p><hr/><div style='margin-top:20px;'><h3>Experience</h3><p>Your experience goes here...</p></div></div>"
     },
     {
         "id": "temp-2",
@@ -29,7 +30,8 @@
         "dimensions": {
             "width": 800,
             "height": 1200
-        }
+        },
+        "html": "<div style='padding: 40px; font-family: serif; background: #fafafa;'><h1>{{fullName}}</h1><p style='font-style:italic;'>{{tagline}}</p></div>"
     },
     {
         "id": "temp-3",
@@ -45,7 +47,8 @@
         "dimensions": {
             "width": 960,
             "height": 540
-        }
+        },
+        "html": "<div style='padding: 60px; font-family: Helvetica, sans-serif;'><h1>{{fullName}}</h1><p>{{tagline}}</p></div>"
     },
     {
         "id": "custom-temp-1",
@@ -57,7 +60,8 @@
         "dimensions": {
             "width": 794,
             "height": 1123
-        }
+        },
+        "html": "<div style='padding: 20px;'><h1>{{fullName}}</h1></div>"
     },
     {
         "id": "ATS-friendly-resume",
@@ -69,6 +73,7 @@
         "dimensions": {
             "width": 794,
             "height": 1123
-        }
+        },
+        "html": "<div style='padding: 20px; font-family: monospace;'><h1>{{fullName}}</h1></div>"
     }
 ]

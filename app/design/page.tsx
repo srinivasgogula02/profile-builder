@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function DesignPage() {
     const [prompt, setPrompt] = useState('');
@@ -12,9 +13,15 @@ export default function DesignPage() {
         if (!prompt) return;
         setLoading(true);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
             const res = await fetch('/api/generate-design', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify({
                     message: prompt,
                     currentHtml: html
@@ -64,8 +71,8 @@ export default function DesignPage() {
                         onClick={handleGenerate}
                         disabled={loading || !prompt}
                         className={`py-3 px-4 rounded-lg font-medium transition-all ${loading || !prompt
-                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/50'
+                            ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-900/50'
                             }`}
                     >
                         {loading ? (

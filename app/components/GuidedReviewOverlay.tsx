@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { ProfileData } from "../lib/schema";
 import { enhanceProfileSection } from "../lib/groq";
+import { supabase } from "../lib/supabase";
 
 // ────────────────────────────────────────────────────────────────────────────────
 // Section configuration
@@ -324,8 +325,14 @@ export default function GuidedReviewOverlay({
       const formData = new FormData();
       formData.append("file", file);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
       const res = await fetch("/api/upload-image", {
         method: "POST",
+        headers: {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
         body: formData,
       });
       const data = await res.json();
@@ -353,9 +360,15 @@ export default function GuidedReviewOverlay({
     setFieldValue("profilePhoto", "");
     if (currentUrl) {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
         await fetch("/api/upload-image", {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          },
           body: JSON.stringify({ url: currentUrl }),
         });
       } catch (err) {
@@ -1598,8 +1611,8 @@ export default function GuidedReviewOverlay({
       <div
         key={cardKey}
         className={`fixed top-0 right-0 h-full w-[460px] bg-white shadow-2xl shadow-slate-900/30 border-l border-slate-200 flex flex-col z-[9999] ${isTransitioning
-            ? "opacity-0 translate-x-4"
-            : "opacity-100 translate-x-0"
+          ? "opacity-0 translate-x-4"
+          : "opacity-100 translate-x-0"
           }`}
         style={{
           animation: "guided-panel-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
