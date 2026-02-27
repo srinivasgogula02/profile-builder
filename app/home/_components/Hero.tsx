@@ -93,8 +93,8 @@ export default function Hero() {
                         {[
                             { label: 'Use Cases', href: '#use-cases' },
                             { label: 'Features', href: '#features' },
-                            { label: 'Testimonials', href: '#testimonials' },
-                            { label: 'Enterprise', href: '#enterprise' },
+                            { label: 'How It Works', href: '#how-it-works' },
+                            { label: 'FAQ', href: '#faq' },
                         ].map((link) => (
                             <a
                                 key={link.label}
@@ -135,7 +135,7 @@ export default function Hero() {
                 {mobileMenuOpen && (
                     <div className="md:hidden bg-[#0A0A0A] border-t border-white/10 shadow-2xl absolute w-full left-0">
                         <div className="px-6 py-6 space-y-2">
-                            {['Use Cases', 'Features', 'Testimonials', 'Enterprise'].map((label) => (
+                            {['Use Cases', 'Features', 'How It Works', 'FAQ'].map((label) => (
                                 <a
                                     key={label}
                                     href={`#${label.toLowerCase().replace(/\s+/g, '-')}`}
@@ -243,7 +243,8 @@ export default function Hero() {
                         Trusted by elite professionals across networks
                     </p>
                     <div className="overflow-hidden whitespace-nowrap relative w-full opacity-40 grayscale hover:grayscale-0 transition-all duration-500 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-                        <style dangerouslySetInnerHTML={{ __html: `
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
                             @keyframes marquee {
                                 0% { transform: translateX(0); }
                                 100% { transform: translateX(-50%); }
@@ -267,7 +268,7 @@ export default function Hero() {
                             <div className="text-xl font-bold text-[#eb8c00]">PwC</div>
                             <div className="text-xl font-black italic text-[#ffe600]">EY</div>
                             <div className="text-xl font-bold tracking-widest text-[#00338d]">KPMG</div>
-                            
+
                             {/* Duplicate for seamless infinite scrolling */}
                             <div className="text-xl font-black tracking-tighter text-white">Microsoft</div>
                             <div className="text-xl font-serif font-bold text-white">McKinsey</div>
