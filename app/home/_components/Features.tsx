@@ -1,171 +1,152 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Bot, FileText, Check, Download, Linkedin, Zap, Palette, Shield } from 'lucide-react';
+import React from 'react';
+import { Bot, Check, Download, Palette, Zap, Linkedin } from 'lucide-react';
 
-const features = [
+const featuresData = [
     {
+        id: 'ai-value',
         icon: Bot,
-        title: 'AI Content Polishing',
-        desc: 'Our advanced AI rewrites your bullet points into powerful, results-driven impact statements. It applies the "So What?" test to every line.',
-        color: '#03334c',
-        bgColor: 'rgba(3, 51, 76, 0.06)',
-        hoverBorder: 'hover:border-[#03334c]/20',
-        large: true,
-        demo: {
-            before: 'Managed a team of 5 engineers',
-            after: 'Led a high-performance team of 5, increasing product delivery speed by 40%',
-        },
+        title: 'AI Value Translation',
+        desc: 'Translates raw experience into business value. Applies the "So What?" test instantly.',
+        color: 'from-red-500 to-rose-600',
+        colSpan: 'lg:col-span-2',
+        content: (
+            <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
+                <div className="flex-1 w-full text-center sm:text-left">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">Raw Input</span>
+                    <p className="text-gray-400 text-sm line-through">Designed a new marketing strategy for 2023</p>
+                </div>
+                <div className="w-8 h-8 shrink-0 rounded-full bg-red-600/20 flex items-center justify-center border border-red-500/30">
+                    <Zap className="w-4 h-4 text-red-500 animate-pulse" />
+                </div>
+                <div className="flex-1 w-full text-center sm:text-left">
+                    <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider mb-1 block">Polished Output</span>
+                    <p className="text-white font-medium text-sm">Spearheaded a go-to-market strategy that generated $2M in pipeline within Q1</p>
+                </div>
+            </div>
+        )
     },
     {
+        id: 'instant-extraction',
         icon: Linkedin,
-        title: 'LinkedIn Import',
-        desc: "Don't start from scratch. Pull all your career data from LinkedIn in one click.",
-        color: '#0077b5',
-        bgColor: 'rgba(0, 119, 181, 0.08)',
-        hoverBorder: 'hover:border-[#0077b5]/25',
-        large: false,
+        title: 'Instant Extraction',
+        desc: "Pull all your career and business data directly from LinkedIn in one click.",
+        color: 'from-blue-500 to-indigo-600',
+        colSpan: 'lg:col-span-1',
+        content: (
+            <div className="mt-6 h-24 bg-[#0A0A0A] rounded-xl border border-white/5 flex items-center justify-center relative overflow-hidden group-hover:border-blue-500/30 transition-colors">
+                <div className="w-12 h-12 bg-[#0A66C2] rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Linkedin className="w-6 h-6 text-white" />
+                </div>
+            </div>
+        )
     },
     {
+        id: 'client-ready',
         icon: Check,
-        title: 'ATS Optimized',
-        desc: 'Clean semantic structure ensures Applicant Tracking Systems parse your profile perfectly.',
-        color: '#059669',
-        bgColor: 'rgba(5, 150, 105, 0.08)',
-        hoverBorder: 'hover:border-emerald-500/25',
-        large: false,
+        title: 'Client-Ready Format',
+        desc: 'Clean, executive structure ensures decision-makers can parse your value.',
+        color: 'from-emerald-500 to-teal-600',
+        colSpan: 'lg:col-span-1',
+        content: (
+            <div className="mt-6 space-y-2">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="w-full h-8 bg-[#0A0A0A] rounded-lg border border-white/5 flex items-center px-3 gap-3">
+                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                        <div className="h-1.5 bg-gray-700 rounded-full w-full" />
+                    </div>
+                ))}
+            </div>
+        )
     },
     {
+        id: 'premium-export',
         icon: Download,
-        title: 'Print-Ready PDF',
-        desc: 'Export high-resolution A4 PDFs that look amazing on screen and in print. No awkward page breaks.',
-        color: '#03334c',
-        bgColor: 'rgba(3, 51, 76, 0.06)',
-        hoverBorder: 'hover:border-[#03334c]/20',
-        large: true,
+        title: 'Premium PDF Export',
+        desc: 'Export high-resolution, pixel-perfect A4 PDFs that command respect in print.',
+        color: 'from-purple-500 to-pink-600',
+        colSpan: 'lg:col-span-1',
+        content: (
+            <div className="mt-6 h-28 relative flex items-center justify-center">
+                <div className="w-20 h-28 bg-white rounded-sm shadow-xl rotate-[-5deg] group-hover:rotate-0 transition-transform flex flex-col p-2">
+                    <div className="w-1/2 h-2 bg-gray-200 rounded mb-2" />
+                    <div className="w-full h-1 bg-gray-200 rounded mb-1" />
+                    <div className="w-4/5 h-1 bg-gray-200 rounded" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center shadow-lg border-2 border-[#111]">
+                    <Download className="w-4 h-4 text-white" />
+                </div>
+            </div>
+        )
     },
     {
+        id: 'executive-design',
         icon: Palette,
-        title: 'Beautiful Design',
-        desc: 'Professionally designed templates that make you stand out from generic resumes.',
-        color: '#7c3aed',
-        bgColor: 'rgba(124, 58, 237, 0.08)',
-        hoverBorder: 'hover:border-violet-500/25',
-        large: false,
-    },
-    {
-        icon: Shield,
-        title: 'Private & Secure',
-        desc: 'Your data stays yours. We never sell or share your personal information with third parties.',
-        color: '#0369a1',
-        bgColor: 'rgba(3, 105, 161, 0.08)',
-        hoverBorder: 'hover:border-sky-600/25',
-        large: false,
-    },
+        title: 'Executive Design',
+        desc: 'Professionally crafted templates that elevate your brand to "premium industry expert."',
+        color: 'from-amber-400 to-orange-500',
+        colSpan: 'lg:col-span-1',
+        content: (
+            <div className="mt-6 h-24 grid grid-cols-2 gap-2">
+                <div className="bg-[#0A0A0A] rounded-lg border border-white/5 p-2 flex flex-col gap-1.5">
+                    <div className="w-full h-8 bg-[#1A1A1A] rounded" />
+                    <div className="w-2/3 h-1 bg-gray-700 rounded" />
+                    <div className="w-1/2 h-1 bg-gray-800 rounded" />
+                </div>
+                <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A] rounded-lg border border-amber-500/20 p-2 flex flex-col gap-1.5 focus">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 mb-1" />
+                    <div className="w-full h-1 bg-gray-600 rounded" />
+                    <div className="w-3/4 h-1 bg-gray-700 rounded" />
+                </div>
+            </div>
+        )
+    }
 ];
 
 export default function Features() {
-    const sectionRef = useRef<HTMLDivElement>(null);
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.15 }
-        );
-        if (sectionRef.current) observer.observe(sectionRef.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section id="features" ref={sectionRef} className="py-28 bg-slate-50/50 text-[#03334c] relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#03334c]/[0.02] to-blue-500/[0.02] rounded-full blur-[120px] pointer-events-none" />
+        <section id="features" className="py-20 bg-[#050505] relative border-t border-white/5">
+            <div className="max-w-7xl mx-auto px-6">
 
-            <div className="max-w-7xl mx-auto px-6 relative">
-                {/* Section Header */}
-                <div
-                    className="text-center max-w-3xl mx-auto mb-20 space-y-5"
-                    style={{
-                        opacity: visible ? 1 : 0,
-                        transform: visible ? 'translateY(0)' : 'translateY(30px)',
-                        transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-                    }}
-                >
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#03334c]/[0.05] border border-[#03334c]/10 text-xs font-bold tracking-wider text-[#03334c] uppercase">
-                        <Zap className="w-3.5 h-3.5" />
-                        <span>Powerful Features</span>
-                    </div>
-                    <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-tight leading-tight">
-                        More than just a resume.{' '}
-                        <br className="hidden sm:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#03334c] to-blue-600">
-                            A smart AI profile.
-                        </span>
+                {/* Header */}
+                <div className="text-center max-w-3xl mx-auto mb-16">
+                    <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-white mb-4">
+                        Designed for <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">Executive Impact.</span>
                     </h2>
-                    <p className="text-slate-500 text-lg leading-relaxed max-w-2xl mx-auto">
-                        Our AI Personal Profile Generator analyzes your career history and rebuilds it into a compelling, professional narrative.
+                    <p className="text-gray-400 text-lg sm:text-xl font-medium">
+                        We don't just format text. We elevate your entire professional identity.
                     </p>
                 </div>
 
-                {/* Bento Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {features.map((feature, idx) => {
+                {/* Compact Bento Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-auto">
+                    {featuresData.map((feature) => {
                         const Icon = feature.icon;
-                        const delay = idx * 0.1;
-
                         return (
                             <div
-                                key={idx}
-                                className={`
-                                    ${feature.large ? 'md:col-span-2' : ''}
-                                    group relative bg-white rounded-2xl p-7 border border-slate-100 
-                                    ${feature.hoverBorder} hover:shadow-xl hover:shadow-slate-200/50 
-                                    transition-all duration-500 hover:-translate-y-1 overflow-hidden
-                                `}
-                                style={{
-                                    opacity: visible ? 1 : 0,
-                                    transform: visible ? 'translateY(0)' : 'translateY(30px)',
-                                    transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
-                                }}
+                                key={feature.id}
+                                className={`group relative bg-[#111] border border-white/10 hover:border-red-500/30 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${feature.colSpan}`}
                             >
-                                {/* Hover glow */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
+                                {/* Glow Effect on Hover */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-red-600/0 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl pointer-events-none" />
 
-                                <div className="relative z-10 h-full flex flex-col">
-                                    {/* Icon */}
-                                    <div
-                                        className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
-                                        style={{ backgroundColor: feature.bgColor }}
-                                    >
-                                        <Icon className="w-5.5 h-5.5" style={{ color: feature.color }} />
+                                <div className="relative z-10 flex flex-col h-full">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${feature.color} shadow-lg shrink-0`}>
+                                            <Icon className="w-5 h-5 text-white" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-white leading-tight">{feature.title}</h3>
                                     </div>
 
-                                    {/* Content */}
-                                    <h3 className="text-lg font-bold text-[#03334c] mb-2">{feature.title}</h3>
-                                    <p className="text-slate-500 text-sm leading-relaxed">{feature.desc}</p>
+                                    <p className="text-sm text-gray-400 font-medium leading-relaxed flex-grow">
+                                        {feature.desc}
+                                    </p>
 
-                                    {/* AI Demo (for the large card) */}
-                                    {feature.demo && (
-                                        <div className="mt-6 bg-slate-50 rounded-xl p-5 border border-slate-100 relative overflow-hidden">
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-500 rounded-l-xl" />
-                                            <div className="pl-3 space-y-2.5">
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-[10px] font-bold text-red-400 bg-red-50 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 mt-0.5">Before</span>
-                                                    <span className="text-xs text-slate-400 line-through">{feature.demo.before}</span>
-                                                </div>
-                                                <div className="flex items-start gap-2">
-                                                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0 mt-0.5">After</span>
-                                                    <span className="text-xs text-[#03334c] font-semibold">{feature.demo.after}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Component Content (Mini previews) */}
+                                    <div className="mt-auto">
+                                        {feature.content}
+                                    </div>
                                 </div>
                             </div>
                         );
