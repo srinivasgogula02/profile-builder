@@ -27,6 +27,7 @@ interface ProfileState {
 
     // Auth
     user: User | null;
+    isPremium: boolean;
     showAuthModal: boolean;
     pendingAction: (() => void) | null;
 
@@ -53,6 +54,7 @@ interface ProfileState {
     setDetectedProfession: (profession: string | null) => void;
     resetChat: () => void;
     setUser: (user: User | null) => void;
+    setIsPremium: (v: boolean) => void;
     setShowAuthModal: (show: boolean) => void;
     setPendingAction: (action: (() => void) | null) => void;
     setHasCompletedLinkedIn: (v: boolean) => void;
@@ -116,6 +118,7 @@ export const useProfileStore = create<ProfileState>()(
 
             // Auth
             user: null,
+            isPremium: false,
             showAuthModal: false,
             pendingAction: null,
 
@@ -195,6 +198,7 @@ export const useProfileStore = create<ProfileState>()(
             }),
 
             setUser: (user) => set({ user }),
+            setIsPremium: (v) => set({ isPremium: v }),
             setShowAuthModal: (show) => set({ showAuthModal: show }),
             setPendingAction: (action) => set({ pendingAction: action }),
             setHasCompletedLinkedIn: (v) => set({ hasCompletedLinkedIn: v }),

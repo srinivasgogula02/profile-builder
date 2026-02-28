@@ -38,6 +38,7 @@ import { loadProfiles, saveProfile, markLinkedinImported, deleteProfile } from "
 import { ProfileData } from "../lib/schema";
 import TemplatesSidebar from "../components/chat/TemplatesSidebar";
 import ChatsSidebar from "../components/chat/ChatsSidebar";
+import PaymentModal from "../components/PaymentModal";
 
 export default function Home() {
   const {
@@ -54,8 +55,10 @@ export default function Home() {
     setSectionProgress,
     updateProfileField,
     user,
+    isPremium,
     showAuthModal,
     setUser,
+    setIsPremium,
     setShowAuthModal,
     setPendingAction,
     hasCompletedLinkedIn,
@@ -78,6 +81,7 @@ export default function Home() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [profileHtml, setProfileHtml] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // LinkedIn Modal State — start hidden until we know if user needs it
   const [showLinkedinModal, setShowLinkedinModal] = useState(false);
@@ -165,6 +169,8 @@ export default function Home() {
         // Returning user — restore their most recent profile history
         const latestProfile = rows[0];
         loadChat(latestProfile);
+        // Sync premium status from DB
+        if ((latestProfile as any).is_premium) setIsPremium(true);
 
         // Only show LinkedIn modal if they never completed it and it's basically empty
         if (!latestProfile.linkedin_imported && !latestProfile.profile_data.fullName) {
@@ -427,7 +433,13 @@ export default function Home() {
   };
 
   const downloadPDF = async () => {
+    // Guest → ask to login first
     if (!requireAuth(() => downloadPDF())) return;
+    // Logged-in but not premium → show payment modal
+    if (!isPremium) {
+      setShowPaymentModal(true);
+      return;
+    }
     setDownloading(true);
     if (typeof window !== "undefined") {
       const element = document.getElementById("printableArea");
@@ -1060,6 +1072,16 @@ export default function Home() {
       {/* Auth Modal */}
       {showAuthModal && <AuthModal />}
 
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={() => {
+          setIsPremium(true);
+          setShowPaymentModal(false);
+        }}
+      />
+
       {/* Polishing / Loading Dialog */}
       {/* Polishing / Loading Dialog */}
       {showProcessingDialog && (
@@ -1162,12 +1184,16 @@ export default function Home() {
             </button>
             <button
               onClick={downloadPDF}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-sm active:scale-95 ${isPremium
+                  ? 'bg-white border-slate-200 text-[#01334c] hover:bg-[#01334c] hover:text-white hover:border-[#01334c] hover:shadow-lg hover:shadow-[#01334c]/20'
+                  : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500'
+                }`}
             >
               {!downloading ? (
                 <>
+                  {!isPremium && <Lock className="w-3.5 h-3.5" />}
                   <span>Export PDF</span>
-                  <Download className="w-3.5 h-3.5" />
+                  {isPremium && <Download className="w-3.5 h-3.5" />}
                 </>
               ) : (
                 <>
@@ -1206,6 +1232,8 @@ export default function Home() {
       <TemplatesSidebar
         isOpen={showTemplates}
         onClose={() => setShowTemplates(false)}
+        isPremium={isPremium}
+        onShowPayment={() => setShowPaymentModal(true)}
       />
 
       {/* Chats Sidebar */}
