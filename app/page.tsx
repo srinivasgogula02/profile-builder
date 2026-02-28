@@ -1,9 +1,7 @@
 import React from 'react';
 import Hero from './home/_components/Hero';
-import Process from './home/_components/Process';
-import ChatSimulation from './home/_components/ChatSimulation';
+import HowItWorks from './home/_components/HowItWorks';
 import Features from './home/_components/Features';
-import ValueProps from './home/_components/ValueProps';
 import Testimonials from './home/_components/Testimonials';
 import FAQ from './home/_components/FAQ';
 import Footer from './home/_components/Footer';
@@ -19,10 +17,8 @@ export default function MarketingPage() {
   return (
     <main className="min-h-screen bg-[#050505]">
       <Hero />
-      <Process />
-      <ChatSimulation />
+      <HowItWorks />
       <Features />
-      <ValueProps />
       <Testimonials />
       <FAQ />
       <Footer />
