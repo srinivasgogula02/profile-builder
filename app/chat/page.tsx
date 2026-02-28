@@ -562,9 +562,10 @@ export default function Home() {
                     setShowOnboardingChoice(false);
                     setShowLinkedinModal(true);
                   }}
-                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-[#0077b5]/20 rounded-[1.5rem] hover:border-[#0077b5] hover:shadow-[0_8px_30px_rgba(0,119,181,0.12)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#0077b5]/10"
+                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-[#0077b5]/20 rounded-[1.5rem] hover:border-[#0077b5] hover:shadow-[0_8px_30px_rgba(0,119,181,0.15)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#0077b5]/10"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#0077b5]/5 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700 pointer-events-none"></div>
+                  {/* Glow orb */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#0077b5]/6 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700 pointer-events-none" />
 
                   <div className="w-14 h-14 bg-[#0077b5]/10 text-[#0077b5] rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#0077b5] group-hover:text-white transition-colors duration-300 shadow-sm">
                     <Linkedin className="w-7 h-7" />
@@ -576,7 +577,7 @@ export default function Home() {
                   </p>
 
                   <div className="w-full py-3.5 rounded-xl bg-[#0077b5] text-white text-sm font-bold tracking-wide transition-all duration-300 text-center mt-auto shadow-md shadow-[#0077b5]/20 group-hover:shadow-[#0077b5]/40 group-hover:-translate-y-0.5">
-                    Recommended 🔥
+                    60s Setup ⚡
                   </div>
                 </button>
 
@@ -592,9 +593,12 @@ export default function Home() {
                     };
                     doSkip();
                   }}
-                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-slate-100 rounded-[1.5rem] hover:border-[#01334c]/30 hover:shadow-[0_8px_30px_rgba(1,51,76,0.08)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#01334c]/5"
+                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-[#01334c]/15 rounded-[1.5rem] hover:border-[#01334c] hover:shadow-[0_8px_30px_rgba(1,51,76,0.13)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#01334c]/10"
                 >
-                  <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#01334c]/5 group-hover:text-[#01334c] transition-colors duration-300 shadow-sm border border-slate-100">
+                  {/* Glow orb */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#01334c]/5 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700 pointer-events-none" />
+
+                  <div className="w-14 h-14 bg-[#01334c]/8 text-[#01334c] rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#01334c] group-hover:text-white transition-colors duration-300 shadow-sm">
                     <Pencil className="w-7 h-7" />
                   </div>
 
@@ -603,15 +607,16 @@ export default function Home() {
                     Perfect if you want full control from the beginning or don't have an up-to-date LinkedIn profile to sync with.
                   </p>
 
-                  <div className="w-full py-3.5 rounded-xl bg-slate-50 text-slate-500 text-sm font-bold tracking-wide group-hover:bg-[#01334c]/5 group-hover:text-[#01334c] transition-all duration-300 text-center mt-auto">
-                    Choose Manual
+                  <div className="w-full py-3.5 rounded-xl bg-[#01334c] text-white text-sm font-bold tracking-wide transition-all duration-300 text-center mt-auto shadow-md shadow-[#01334c]/20 group-hover:shadow-[#01334c]/40 group-hover:-translate-y-0.5">
+                    Build My Way ✏️
                   </div>
                 </button>
               </div>
 
               <p className="text-[13px] text-slate-400 mt-8 font-medium">
-                Don't worry, you can always edit every detail later regardless of how you start.
+                Either way, you can edit every detail. Your data stays private and never shared.
               </p>
+
             </div>
           </div>
         </div>
@@ -1184,7 +1189,7 @@ export default function Home() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
             >
               <Pencil className="w-3.5 h-3.5" />
-              <span>Edit</span>
+              <span>Edit Section</span>
             </button>
             <button
               onClick={downloadPDF}
