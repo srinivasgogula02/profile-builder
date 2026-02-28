@@ -116,12 +116,12 @@ export default function DesignEditorPage() {
                     document.body.removeChild(a);
                     setIsGenerating(false);
                 } else if (format === 'pdf') {
-                    // Generate PDF from the received PNG data URL
+                    // Generate PDF from the received PNG data URL to preserve ALL styles
                     try {
                         const { jsPDF } = (await import('jspdf'));
                         const pdf = new jsPDF({
                             orientation: 'portrait',
-                            unit: 'mm',
+                            unit: 'px',
                             format: 'a4'
                         });
 

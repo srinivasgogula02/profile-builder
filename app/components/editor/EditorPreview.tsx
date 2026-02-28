@@ -431,15 +431,47 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
                              });
                              if (overlayBtn) overlayBtn.style.display = 'none';
 
-                             // ... (html-to-image logic same as before)
+                             setTimeout(() => {
+                                 console.log("Starting html2canvas generation...");
+                                 if (window.html2canvas) {
+                                     window.html2canvas(document.body, {
+                                         scale: 2, // higher resolution
+                                         useCORS: true, // critical for external images like from Supabase
+                                         allowTaint: true,
+                                         backgroundColor: '#ffffff',
+                                         logging: true // enable html2canvas internal logs
+                                     }).then(canvas => {
+                                         console.log("Canvas generated successfully!");
+                                         const dataUrl = canvas.toDataURL('image/png', 1.0);
+                                         window.parent.postMessage({
+                                             type: 'DOWNLOAD_READY',
+                                             format: format,
+                                             dataUrl: dataUrl,
+                                             fileName: fileName
+                                         }, '*');
+                                     }).catch(err => {
+                                         console.error("html2canvas promise rejected:", err);
+                                         let errMsg = "Canvas generation failed";
+                                         if (err) {
+                                             if (err instanceof Error) errMsg = err.message;
+                                             else if (typeof err === 'object') errMsg = JSON.stringify(err);
+                                             else errMsg = String(err);
+                                         }
+                                         window.parent.postMessage({ type: 'DOWNLOAD_ERROR', error: errMsg }, '*');
+                                     });
+                                 } else {
+                                     window.parent.postMessage({ type: 'DOWNLOAD_ERROR', error: 'html2canvas library not loaded' }, '*');
+                                 }
+                             }, 500);
                         } catch (err) {
-                             // ...
+                             console.error("error inside GENERATE_DOWNLOAD", err);
+                             window.parent.postMessage({ type: 'DOWNLOAD_ERROR', error: err ? err.toString() : 'Unknown error' }, '*');
                          }
                     }
                 });
             })();
-            </script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         `;
 
         let finalHtml = compiledHtml;

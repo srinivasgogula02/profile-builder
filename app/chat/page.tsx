@@ -19,6 +19,7 @@ import {
   LogOut,
   Pencil,
   MessageCircle,
+  LayoutTemplate,
 } from "lucide-react";
 import { renderProfile } from "../lib/default-content";
 import { useProfileStore } from "../lib/store";
@@ -34,6 +35,7 @@ import AuthModal from "../components/AuthModal";
 import { supabase } from "../lib/supabase";
 import { loadProfile, saveProfile, markLinkedinImported } from "../lib/db";
 import { ProfileData } from "../lib/schema";
+import TemplatesSidebar from "../components/chat/TemplatesSidebar";
 
 export default function Home() {
   const {
@@ -79,6 +81,9 @@ export default function Home() {
 
   // New Onboarding Choice Dialog State
   const [showOnboardingChoice, setShowOnboardingChoice] = useState(false);
+
+  // Templates Sidebar State
+  const [showTemplates, setShowTemplates] = useState(false);
 
   // Edit Form State
   const [showEditForm, setShowEditForm] = useState(false);
@@ -983,6 +988,13 @@ export default function Home() {
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
+            >
+              <LayoutTemplate className="w-3.5 h-3.5" />
+              <span>Templates</span>
+            </button>
+            <button
               onClick={() => setShowGuidedReview(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
             >
@@ -1030,6 +1042,12 @@ export default function Home() {
           <div className="h-20"></div>
         </div>
       </main>
+
+      {/* Templates Sidebar */}
+      <TemplatesSidebar
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+      />
     </div>
   );
 }
