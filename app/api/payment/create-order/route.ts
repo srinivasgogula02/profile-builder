@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { createClient } from '@supabase/supabase-js';
+import { isTrialActive } from '@/app/lib/trial';
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,8 +17,14 @@ const razorpay = new Razorpay({
 const AMOUNT_PAISE = 9900; // ₹99 in paise
 const CURRENCY = 'INR';
 
+
 export async function POST(req: NextRequest) {
     try {
+        // ── Free trial bypass ─────────────────────────────────────────────────
+        if (isTrialActive()) {
+            return NextResponse.json({ already_paid: true, trial: true });
+        }
+
         // ── Auth ──────────────────────────────────────────────────────────────
         const authHeader = req.headers.get('authorization');
         if (!authHeader?.startsWith('Bearer ')) {

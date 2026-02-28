@@ -39,6 +39,8 @@ import { ProfileData } from "../lib/schema";
 import TemplatesSidebar from "../components/chat/TemplatesSidebar";
 import ChatsSidebar from "../components/chat/ChatsSidebar";
 import PaymentModal from "../components/PaymentModal";
+import TrialBanner from "../components/TrialBanner";
+import { isTrialActive } from "../lib/trial";
 
 export default function Home() {
   const {
@@ -82,6 +84,10 @@ export default function Home() {
   const [downloading, setDownloading] = useState(false);
   const [profileHtml, setProfileHtml] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Free trial — true while within the 2-day window, false once expired
+  const [trialActive, setTrialActive] = useState(() => isTrialActive());
+  // Effective premium: real purchase OR active trial
+  const effectivePremium = isPremium || trialActive;
 
   // LinkedIn Modal State — start hidden until we know if user needs it
   const [showLinkedinModal, setShowLinkedinModal] = useState(false);
@@ -258,8 +264,6 @@ export default function Home() {
   };
 
   const scrapeLinkedin = async () => {
-    if (isOnCooldown()) return;
-    if (isOnCooldown()) return;
 
     if (!isValidLinkedinUrl(linkedinUrl)) {
       setScrapeStatus("error");
@@ -435,8 +439,8 @@ export default function Home() {
   const downloadPDF = async () => {
     // Guest → ask to login first
     if (!requireAuth(() => downloadPDF())) return;
-    // Logged-in but not premium → show payment modal
-    if (!isPremium) {
+    // Logged-in but not premium (and no active trial) → show payment modal
+    if (!effectivePremium) {
       setShowPaymentModal(true);
       return;
     }
@@ -1184,16 +1188,16 @@ export default function Home() {
             </button>
             <button
               onClick={downloadPDF}
-              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-sm active:scale-95 ${isPremium
-                  ? 'bg-white border-slate-200 text-[#01334c] hover:bg-[#01334c] hover:text-white hover:border-[#01334c] hover:shadow-lg hover:shadow-[#01334c]/20'
-                  : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500'
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-sm active:scale-95 ${effectivePremium
+                ? 'bg-white border-slate-200 text-[#01334c] hover:bg-[#01334c] hover:text-white hover:border-[#01334c] hover:shadow-lg hover:shadow-[#01334c]/20'
+                : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500'
                 }`}
             >
               {!downloading ? (
                 <>
-                  {!isPremium && <Lock className="w-3.5 h-3.5" />}
+                  {!effectivePremium && <Lock className="w-3.5 h-3.5" />}
                   <span>Export PDF</span>
-                  {isPremium && <Download className="w-3.5 h-3.5" />}
+                  {effectivePremium && <Download className="w-3.5 h-3.5" />}
                 </>
               ) : (
                 <>
@@ -1232,7 +1236,7 @@ export default function Home() {
       <TemplatesSidebar
         isOpen={showTemplates}
         onClose={() => setShowTemplates(false)}
-        isPremium={isPremium}
+        isPremium={effectivePremium}
         onShowPayment={() => setShowPaymentModal(true)}
       />
 
@@ -1246,6 +1250,11 @@ export default function Home() {
           setShowOnboardingChoice(true);
         }}
       />
+
+      {/* Trial Countdown Banner */}
+      {trialActive && (
+        <TrialBanner onExpired={() => setTrialActive(false)} />
+      )}
     </div>
   );
 }
