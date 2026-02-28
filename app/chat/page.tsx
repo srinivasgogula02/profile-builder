@@ -18,6 +18,8 @@ import {
   Pencil,
   MessageCircle,
   LayoutTemplate,
+  MessageSquare,
+  Menu,
 } from "lucide-react";
 import { renderProfile } from "../lib/default-content";
 import { useProfileStore } from "../lib/store";
@@ -31,9 +33,10 @@ import EditProfileForm from "../components/EditProfileForm";
 import GuidedReviewOverlay from "../components/GuidedReviewOverlay";
 import AuthModal from "../components/AuthModal";
 import { supabase } from "../lib/supabase";
-import { loadProfile, saveProfile, markLinkedinImported } from "../lib/db";
+import { loadProfiles, saveProfile, markLinkedinImported, deleteProfile } from "../lib/db";
 import { ProfileData } from "../lib/schema";
 import TemplatesSidebar from "../components/chat/TemplatesSidebar";
+import ChatsSidebar from "../components/chat/ChatsSidebar";
 
 export default function Home() {
   const {
@@ -62,6 +65,12 @@ export default function Home() {
     setProfileLoaded,
     showGuidedReview,
     setShowGuidedReview,
+    activeProfileId,
+    setActiveProfileId,
+    profilesList,
+    setProfilesList,
+    loadChat,
+    resetChat,
   } = useProfileStore();
 
   const [userInput, setUserInput] = useState("");
@@ -80,8 +89,9 @@ export default function Home() {
   // New Onboarding Choice Dialog State
   const [showOnboardingChoice, setShowOnboardingChoice] = useState(false);
 
-  // Templates Sidebar State
+  // Sidebars State
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showChatsSidebar, setShowChatsSidebar] = useState(false);
 
   // Edit Form State
   const [showEditForm, setShowEditForm] = useState(false);
@@ -135,14 +145,28 @@ export default function Home() {
   // ─── Auth listener + DB profile load ──────────────────────────────────────
   useEffect(() => {
     const loadUserProfile = async (userId: string) => {
-      const row = await loadProfile(userId);
-      if (row) {
-        // Returning user — restore their profile
-        setProfileData(row.profile_data);
-        setHasCompletedLinkedIn(row.linkedin_imported);
+      const rows = await loadProfiles(userId);
+      const currentProfileData = useProfileStore.getState().profileData;
+      const hasGuestContent = !!currentProfileData.fullName || !!currentProfileData.aboutMe;
+      const activeProfileId = useProfileStore.getState().activeProfileId;
+
+      if (hasGuestContent && !activeProfileId) {
+        // User built a profile as a guest, then logged in.
+        // DO NOT overwrite. Let the auto-save persist it as a new profile.
+        setProfilesList(rows);
         setProfileLoaded(true);
-        // Only show LinkedIn modal if they never completed it
-        if (!row.linkedin_imported) {
+        return;
+      }
+
+      setProfilesList(rows);
+
+      if (rows.length > 0) {
+        // Returning user — restore their most recent profile history
+        const latestProfile = rows[0];
+        loadChat(latestProfile);
+
+        // Only show LinkedIn modal if they never completed it and it's basically empty
+        if (!latestProfile.linkedin_imported && !latestProfile.profile_data.fullName) {
           setShowOnboardingChoice(true);
         }
       } else {
@@ -193,7 +217,13 @@ export default function Home() {
     saveTimerRef.current = setTimeout(async () => {
       setIsSaving(true);
       const html = renderProfile(profileData);
-      await saveProfile(user.id, profileData, html);
+      const savedRow = await saveProfile(user.id, profileData, messages, html, activeProfileId || undefined);
+
+      if (savedRow && !activeProfileId) {
+        setActiveProfileId(savedRow.id);
+        const rows = await loadProfiles(user.id);
+        setProfilesList(rows);
+      }
       setIsSaving(false);
     }, 3000);
 
@@ -221,7 +251,7 @@ export default function Home() {
   };
 
   const scrapeLinkedin = async () => {
-    if (!requireAuth(() => scrapeLinkedin())) return;
+    if (isOnCooldown()) return;
     if (isOnCooldown()) return;
 
     if (!isValidLinkedinUrl(linkedinUrl)) {
@@ -329,8 +359,6 @@ export default function Home() {
     if (messageText === "" || isTyping) return;
     if (isOnCooldown()) return;
 
-    if (!requireAuth(() => sendMessage(messageText))) return;
-
     addMessage({ text: messageText, sender: "user" });
     setUserInput("");
     setIsTyping(true);
@@ -384,11 +412,11 @@ export default function Home() {
   };
 
   const handleQuickReply = (reply: string) => {
-    if (!requireAuth(() => handleQuickReply(reply))) return;
     sendMessage(reply);
   };
 
   const downloadPDF = async () => {
+    if (!requireAuth(() => downloadPDF())) return;
     setDownloading(true);
     if (typeof window !== "undefined") {
       const element = document.getElementById("printableArea");
@@ -535,7 +563,6 @@ export default function Home() {
                       setHasCompletedLinkedIn(true);
                       if (user) markLinkedinImported(user.id);
                     };
-                    if (!requireAuth(doSkip)) return;
                     doSkip();
                   }}
                   className="group relative flex flex-col items-center p-8 bg-white border-2 border-slate-100 rounded-[1.5rem] hover:border-[#01334c]/30 hover:shadow-[0_8px_30px_rgba(1,51,76,0.08)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#01334c]/5"
@@ -673,7 +700,6 @@ export default function Home() {
                       setHasCompletedLinkedIn(true);
                       if (user) markLinkedinImported(user.id);
                     };
-                    if (!requireAuth(doSkip)) return;
                     doSkip();
                   }}
                   disabled={scrapeStatus === "loading"}
@@ -692,61 +718,99 @@ export default function Home() {
         className={`w-[420px] flex-shrink-0 flex flex-col border-r border-slate-200 bg-white relative z-20 shadow-xl shadow-slate-200/50 transition-all duration-300 ${showGuidedReview ? "hidden" : ""}`}
       >
         {/* Chat Header */}
-        <div className="h-20 flex items-center px-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="w-10 h-10 rounded-xl bg-[#01334c] flex items-center justify-center shadow-lg shadow-[#01334c]/20 ring-4 ring-[#01334c]/5 transition-transform hover:scale-105 duration-300">
-              <FileText className="w-5 h-5 text-white" />
+        <div className="h-20 flex items-center px-4 md:px-5 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10 w-full overflow-hidden">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!requireAuth(() => setShowChatsSidebar(true))) return;
+                setShowChatsSidebar(true);
+              }}
+              className="p-2 -ml-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors shrink-0"
+              title="Previous Chats"
+            >
+              <Menu className="w-5 h-5 shrink-0" />
+            </button>
+            <div className="w-9 h-9 rounded-xl bg-[#01334c] flex items-center justify-center shadow-lg shadow-[#01334c]/20 ring-4 ring-[#01334c]/5 transition-transform hover:scale-105 duration-300 shrink-0">
+              <FileText className="w-4 h-4 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="font-bold text-lg text-[#01334c] tracking-tight">
+            <div className="flex flex-col min-w-0">
+              <h1 className="font-bold text-[16px] leading-tight text-[#01334c] tracking-tight truncate">
                 ProfileArchitect
               </h1>
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest truncate">
                   AI Workspace
                 </p>
                 {isSaving && (
-                  <span className="flex items-center gap-1 text-[10px] text-amber-500 font-medium">
-                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" />
+                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-medium shrink-0">
+                    <span className="w-1 h-1 bg-amber-400 rounded-full animate-pulse" />
                     Saving
                   </span>
                 )}
               </div>
             </div>
           </div>
-          <button
-            onClick={() => {
-              if (
-                !requireAuth(() => {
-                  setLinkedinUrl("");
-                  setScrapeStatus("idle");
-                  setScrapeMessage("");
-                  setShowLinkedinModal(true);
-                })
-              )
-                return;
-              setLinkedinUrl("");
-              setScrapeStatus("idle");
-              setScrapeMessage("");
-              setShowLinkedinModal(true);
-            }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#0077b5] bg-[#0077b5]/5 hover:bg-[#0077b5]/10 border border-[#0077b5]/20 transition-all duration-200 hover:shadow-sm active:scale-95"
-            title="Import from LinkedIn"
-          >
-            <Linkedin className="w-4 h-4" />
-            <span className="hidden sm:inline">Import LinkedIn</span>
-          </button>
 
-          {user && (
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
             <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-              title="Sign Out"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (
+                  !requireAuth(() => {
+                    setLinkedinUrl("");
+                    setScrapeStatus("idle");
+                    setScrapeMessage("");
+                    setShowLinkedinModal(true);
+                  })
+                )
+                  return;
+                setLinkedinUrl("");
+                setScrapeStatus("idle");
+                setScrapeMessage("");
+                setShowLinkedinModal(true);
+              }}
+              className="p-2 rounded-xl text-[#0077b5] bg-[#0077b5]/5 hover:bg-[#0077b5]/10 border border-[#0077b5]/20 transition-all duration-200 hover:shadow-sm active:scale-95 shrink-0"
+              title="Import from LinkedIn"
             >
-              <LogOut className="w-5 h-5" />
+              <Linkedin className="w-4 h-4 shrink-0" />
             </button>
-          )}
+
+            {user && (
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleLogout();
+                }}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                title="Sign Out"
+              >
+                <LogOut className="w-4 h-4 shrink-0" />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Guest Mode Banner */}
+        {!user && (
+          <div className="bg-amber-50 border-b border-amber-200 px-5 py-2.5 flex items-center justify-between shadow-xs z-10">
+            <div className="flex items-center gap-2 text-amber-800">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-xs font-semibold">
+                Guest Mode Active
+              </span>
+            </div>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="text-[10px] bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-full shadow-sm transition-transform active:scale-95"
+            >
+              Login to Save
+            </button>
+          </div>
+        )}
 
         {/* Section Progress Pills */}
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
@@ -1011,13 +1075,29 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowTemplates(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
-            >
-              <LayoutTemplate className="w-3.5 h-3.5" />
-              <span>Templates</span>
-            </button>
+            {/* Themes button with revolving border */}
+            <div className="relative group active:scale-95 transition-transform duration-150">
+              {/* Spinning conic-gradient ring */}
+              <div className="absolute inset-[-1.5px] rounded-[13px] overflow-hidden pointer-events-none">
+                <div
+                  className="absolute inset-[-100%] animate-spin"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent 0%, transparent 55%, #01334c 65%, #0a6b8a 75%, transparent 85%)',
+                    animationDuration: '2.5s',
+                    animationTimingFunction: 'linear',
+                  }}
+                />
+              </div>
+              {/* The actual button */}
+              <button
+                onClick={() => setShowTemplates(true)}
+                className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#01334c] text-xs font-bold uppercase tracking-wider border border-slate-200 group-hover:bg-[#01334c] group-hover:text-white group-hover:border-[#01334c] transition-all duration-300 shadow-sm"
+              >
+                <LayoutTemplate className="w-3.5 h-3.5" />
+                <span>Themes</span>
+                <span className="text-[9px] font-black bg-[#01334c]/10 group-hover:bg-white/20 text-[#01334c] group-hover:text-white px-1.5 py-0.5 rounded-full transition-colors">NEW</span>
+              </button>
+            </div>
             <button
               onClick={() => setShowGuidedReview(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[#01334c] text-xs font-bold uppercase tracking-wider hover:bg-[#01334c] hover:text-white hover:border-[#01334c] transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#01334c]/20 active:scale-95"
@@ -1071,6 +1151,17 @@ export default function Home() {
       <TemplatesSidebar
         isOpen={showTemplates}
         onClose={() => setShowTemplates(false)}
+      />
+
+      {/* Chats Sidebar */}
+      <ChatsSidebar
+        isOpen={showChatsSidebar}
+        onClose={() => setShowChatsSidebar(false)}
+        onNewChat={() => {
+          resetChat();
+          setShowChatsSidebar(false);
+          setShowOnboardingChoice(true);
+        }}
       />
     </div>
   );

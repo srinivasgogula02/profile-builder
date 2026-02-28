@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { X, LayoutTemplate, Loader2, AlertCircle } from "lucide-react";
+import { X, LayoutTemplate, Loader2, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
 import { supabase } from "@/app/lib/supabase";
-
 
 interface TemplatesSidebarProps {
     isOpen: boolean;
@@ -16,7 +15,16 @@ interface Template {
     name: string;
     description?: string;
     thumbnail?: string;
+    category?: string;
 }
+
+const CATEGORY_COLORS: Record<string, string> = {
+    Simple: "bg-slate-100 text-slate-700",
+    Professional: "bg-blue-50 text-blue-700",
+    Creative: "bg-purple-50 text-purple-700",
+    Modern: "bg-emerald-50 text-emerald-700",
+    Academic: "bg-amber-50 text-amber-700",
+};
 
 export default function TemplatesSidebar({ isOpen, onClose }: TemplatesSidebarProps) {
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -25,19 +33,18 @@ export default function TemplatesSidebar({ isOpen, onClose }: TemplatesSidebarPr
 
     useEffect(() => {
         if (!isOpen) return;
+        if (templates.length > 0) return;
 
         const fetchTemplates = async () => {
             try {
                 setIsLoading(true);
                 setError(null);
                 const { data, error: fetchError } = await supabase
-                    .from('templates')
-                    .select('*')
-                    .order('created_at', { ascending: false });
+                    .from("templates")
+                    .select("id, name, description, thumbnail, category")
+                    .order("created_at", { ascending: false });
 
-                if (fetchError) {
-                    throw fetchError;
-                }
+                if (fetchError) throw fetchError;
                 setTemplates(data || []);
             } catch (err) {
                 console.error("Error fetching templates:", err);
@@ -47,9 +54,7 @@ export default function TemplatesSidebar({ isOpen, onClose }: TemplatesSidebarPr
             }
         };
 
-        if (templates.length === 0) {
-            fetchTemplates();
-        }
+        fetchTemplates();
     }, [isOpen, templates.length]);
 
     return (
@@ -57,34 +62,39 @@ export default function TemplatesSidebar({ isOpen, onClose }: TemplatesSidebarPr
             {/* Backdrop */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 transition-opacity"
+                    className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 transition-opacity"
                     onClick={onClose}
                 />
             )}
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 left-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"
+                className={`fixed top-0 right-0 h-full w-[340px] bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out flex flex-col ${isOpen ? "translate-x-0" : "translate-x-full"
                     }`}
             >
-                <div className="h-20 px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-[#01334c] to-[#024466] text-white">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[#01334c] flex items-center justify-center shadow-lg shadow-[#01334c]/20">
+                        <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
                             <LayoutTemplate className="w-5 h-5 text-white" />
                         </div>
-                        <h2 className="font-bold text-lg text-[#01334c]">Templates</h2>
+                        <div>
+                            <h2 className="font-bold text-base">Choose a Template</h2>
+                            <p className="text-[11px] text-white/60">Click any to apply it</p>
+                        </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="p-2 -mr-1 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {/* Template Grid */}
+                <div className="flex-1 overflow-y-auto p-4">
                     {isLoading ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-slate-400 space-y-3">
+                        <div className="flex flex-col items-center justify-center h-48 text-slate-400 space-y-3">
                             <Loader2 className="w-6 h-6 animate-spin text-[#01334c]" />
                             <span className="text-sm font-medium">Loading templates...</span>
                         </div>
@@ -94,23 +104,64 @@ export default function TemplatesSidebar({ isOpen, onClose }: TemplatesSidebarPr
                             <span className="text-sm font-medium">{error}</span>
                         </div>
                     ) : templates.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-slate-500 bg-slate-50 rounded-xl border border-slate-100 p-4 text-center">
-                            <span className="text-sm font-medium">No templates found</span>
+                        <div className="flex flex-col items-center justify-center h-40 text-slate-400 bg-slate-50 rounded-xl border border-slate-100 p-6 text-center">
+                            <LayoutTemplate className="w-8 h-8 mb-2 text-slate-300" />
+                            <span className="text-sm font-medium">No templates yet</span>
+                            <span className="text-xs text-slate-400 mt-1">Add templates from the admin panel</span>
                         </div>
                     ) : (
-                        templates.map((template) => (
-                            <Link
-                                key={template.id}
-                                href={`/design/${template.id}`}
-                                className="flex items-center gap-3 p-4 rounded-xl border border-slate-100 bg-white hover:border-[#01334c]/30 hover:shadow-md hover:shadow-[#01334c]/5 transition-all text-slate-700 hover:text-[#01334c] group"
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-[#01334c]/5 group-hover:border-[#01334c]/20 transition-colors overflow-hidden shrink-0">
-                                    <LayoutTemplate className="w-4 h-4 text-slate-400 group-hover:text-[#01334c]" />
-                                </div>
-                                <span className="text-sm font-semibold">{template.name}</span>
-                            </Link>
-                        ))
+                        <div className="grid grid-cols-2 gap-3">
+                            {templates.map((template) => (
+                                <Link
+                                    key={template.id}
+                                    href={`/design/${template.id}`}
+                                    onClick={onClose}
+                                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-[#01334c]/40 hover:shadow-lg hover:shadow-[#01334c]/10 transition-all duration-300 active:scale-[0.98]"
+                                >
+                                    {/* Thumbnail */}
+                                    <div className="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden">
+                                        {template.thumbnail ? (
+                                            <img
+                                                src={template.thumbnail}
+                                                alt={template.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 gap-2">
+                                                <LayoutTemplate className="w-8 h-8 text-slate-300" />
+                                                <span className="text-[10px] text-slate-400 font-medium">No preview</span>
+                                            </div>
+                                        )}
+                                        {/* Hover overlay */}
+                                        <div className="absolute inset-0 bg-[#01334c]/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                            <div className="flex items-center gap-1.5 px-4 py-2 bg-white rounded-full text-[#01334c] text-xs font-bold shadow-lg">
+                                                <Sparkles className="w-3.5 h-3.5" />
+                                                Use This
+                                                <ArrowRight className="w-3 h-3" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="p-2.5">
+                                        <p className="text-xs font-bold text-slate-800 line-clamp-1 leading-tight">{template.name}</p>
+                                        {template.category && (
+                                            <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[template.category] || "bg-slate-100 text-slate-600"}`}>
+                                                {template.category}
+                                            </span>
+                                        )}
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
                     )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/80">
+                    <p className="text-[11px] text-slate-400 text-center">
+                        {templates.length} template{templates.length !== 1 ? "s" : ""} available
+                    </p>
                 </div>
             </div>
         </>

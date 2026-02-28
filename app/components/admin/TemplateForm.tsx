@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, ArrowLeft, Image as ImageIcon, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
+import { Save, Loader2, ArrowLeft, Image as ImageIcon, Sparkles, CheckCircle, AlertCircle, Upload, X } from 'lucide-react';
 import Link from 'next/link';
 import EditorPreview from '@/app/components/editor/EditorPreview';
 import { useProfileStore } from '@/app/lib/store';
@@ -18,6 +18,8 @@ export default function TemplateForm({ initialData, isEdit = false }: TemplateFo
     const { profileData } = useProfileStore();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [thumbnailUploading, setThumbnailUploading] = useState(false);
+    const thumbnailInputRef = React.useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         id: '',
@@ -69,6 +71,36 @@ export default function TemplateForm({ initialData, isEdit = false }: TemplateFo
             setFormData(prev => ({ ...prev, id: generatedId }));
         }
     }, [formData.name, isEdit, formData.id]);
+
+    const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !formData.id) return;
+        setThumbnailUploading(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('templateId', formData.id);
+            const res = await fetch('/api/admin/upload-template-thumbnail', {
+                method: 'POST',
+                headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+                body: fd,
+            });
+            const data = await res.json();
+            if (res.ok && data.url) {
+                setFormData(prev => ({ ...prev, thumbnail: data.url }));
+                setMessage({ type: 'success', text: 'Thumbnail uploaded!' });
+            } else {
+                setMessage({ type: 'error', text: data.error || 'Upload failed' });
+            }
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Upload failed' });
+        } finally {
+            setThumbnailUploading(false);
+            if (thumbnailInputRef.current) thumbnailInputRef.current.value = '';
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -214,16 +246,70 @@ export default function TemplateForm({ initialData, isEdit = false }: TemplateFo
                             </div>
                         </div>
 
+                        {/* Preview Image Upload */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Thumbnail URL</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Preview Thumbnail</label>
                             <input
-                                type="text"
-                                name="thumbnail"
-                                value={formData.thumbnail}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                                placeholder="https://..."
+                                ref={thumbnailInputRef}
+                                type="file"
+                                accept="image/png, image/jpeg, image/webp, image/gif, .png, .jpg, .jpeg, .webp, .gif"
+                                className="hidden"
+                                onChange={handleThumbnailUpload}
                             />
+                            {formData.thumbnail ? (
+                                <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border-2 border-slate-200 group">
+                                    <img
+                                        src={formData.thumbnail}
+                                        alt="Thumbnail preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => thumbnailInputRef.current?.click()}
+                                            disabled={thumbnailUploading || !formData.id}
+                                            className="px-3 py-1.5 rounded-lg bg-white text-[#01334c] text-xs font-bold hover:bg-slate-100 transition-colors disabled:opacity-50"
+                                        >
+                                            {thumbnailUploading ? 'Uploading...' : 'Replace'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, thumbnail: '' }))}
+                                            className="px-3 py-1.5 rounded-lg bg-white/20 text-white text-xs font-bold hover:bg-white/30 transition-colors"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                    {thumbnailUploading && (
+                                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 text-[#01334c] animate-spin" />
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!formData.id) {
+                                            setMessage({ type: 'error', text: 'Please set a Template ID/name first.' });
+                                            return;
+                                        }
+                                        thumbnailInputRef.current?.click();
+                                    }}
+                                    disabled={thumbnailUploading}
+                                    className="w-full aspect-[3/4] rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-[#01334c]/[0.03] hover:border-[#01334c]/40 transition-all flex flex-col items-center justify-center gap-2 disabled:opacity-50 group"
+                                >
+                                    {thumbnailUploading ? (
+                                        <Loader2 className="w-6 h-6 text-[#01334c] animate-spin" />
+                                    ) : (
+                                        <Upload className="w-6 h-6 text-slate-400 group-hover:text-[#01334c] transition-colors" />
+                                    )}
+                                    <span className="text-xs font-medium text-slate-500">
+                                        {thumbnailUploading ? 'Uploading...' : 'Upload Preview Image'}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400">PNG, JPG, WebP up to 10MB</span>
+                                </button>
+                            )}
                         </div>
 
                         <div>

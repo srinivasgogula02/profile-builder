@@ -685,7 +685,7 @@ export default function GuidedReviewOverlay({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/png, image/jpeg, image/webp, image/gif, .png, .jpg, .jpeg, .webp, .gif"
                 onChange={handleImageUpload}
                 className="hidden"
               />

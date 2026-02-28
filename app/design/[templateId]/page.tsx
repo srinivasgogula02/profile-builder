@@ -9,16 +9,15 @@ import DownloadOptions from '@/app/components/editor/DownloadOptions';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
-import { useAuthProtection } from '@/app/hooks/useAuthProtection';
 import { supabase } from '@/app/lib/supabase';
+import AuthModal from '@/app/components/AuthModal';
 
 export default function DesignEditorPage() {
-    const { isLoading: authLoading, isAuthorized } = useAuthProtection();
+    const { profileData, user, setShowAuthModal, setPendingAction } = useProfileStore();
     const params = useParams();
     const router = useRouter();
     const templateId = params.templateId as string;
 
-    const { profileData } = useProfileStore();
     const [currentHtml, setCurrentHtml] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -27,7 +26,7 @@ export default function DesignEditorPage() {
 
     // Load template content
     useEffect(() => {
-        if (!templateId || !isAuthorized) return;
+        if (!templateId) return;
 
         const loadTemplate = async () => {
             try {
@@ -67,7 +66,7 @@ export default function DesignEditorPage() {
         };
 
         loadTemplate();
-    }, [templateId, profileData, isAuthorized]);
+    }, [templateId, profileData]);
 
     const handleAiEdit = async (prompt: string) => {
         setIsGenerating(true);
@@ -180,7 +179,17 @@ export default function DesignEditorPage() {
         reader.readAsDataURL(file);
     };
 
+    const requireAuth = (action: () => void) => {
+        if (!user) {
+            setPendingAction(() => action);
+            setShowAuthModal(true);
+            return false;
+        }
+        return true;
+    };
+
     const handleDownload = async (format: 'html' | 'png' | 'pdf') => {
+        if (!requireAuth(() => handleDownload(format))) return;
         setIsGenerating(true);
         try {
             const fileName = `${profileData.fullName || 'profile'}-${templateId}`;
@@ -216,7 +225,7 @@ export default function DesignEditorPage() {
         }
     };
 
-    if (authLoading || (isAuthorized && loading)) {
+    if (loading) {
         return (
             <div className="h-screen flex items-center justify-center bg-slate-50 text-[#01334c]">
                 <div className="animate-pulse flex flex-col items-center gap-4">
@@ -226,8 +235,6 @@ export default function DesignEditorPage() {
             </div>
         );
     }
-
-    if (!isAuthorized) return null;
 
     return (
         <div className="h-screen flex flex-col bg-slate-50 overflow-hidden font-sans text-slate-900 selection:bg-[#01334c] selection:text-white">
@@ -299,9 +306,11 @@ export default function DesignEditorPage() {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept="image/*"
+                accept="image/png, image/jpeg, image/webp, image/gif, .png, .jpg, .jpeg, .webp, .gif"
                 onChange={handleImageUpload}
             />
+            {/* Auth Modal for guest prompt */}
+            {!user && <AuthModal />}
         </div>
     );
 }
