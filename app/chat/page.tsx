@@ -20,6 +20,7 @@ import {
   LayoutTemplate,
   MessageSquare,
   Menu,
+  Lock,
 } from "lucide-react";
 import { renderProfile } from "../lib/default-content";
 import { useProfileStore } from "../lib/store";
@@ -354,10 +355,20 @@ export default function Home() {
     });
   };
 
+  const GUEST_MSG_LIMIT = 4;
+  const guestMsgCount = messages.filter((m) => m.sender === "user").length;
+  const isGuestLocked = !user && guestMsgCount >= GUEST_MSG_LIMIT;
+
   const sendMessage = async (text?: string) => {
     const messageText = text || userInput.trim();
     if (messageText === "" || isTyping) return;
     if (isOnCooldown()) return;
+
+    // Guest message limit gate
+    if (isGuestLocked) {
+      setShowAuthModal(true);
+      return;
+    }
 
     addMessage({ text: messageText, sender: "user" });
     setUserInput("");
@@ -927,27 +938,69 @@ export default function Home() {
 
         {/* Input Area */}
         <div className="p-5 border-t border-slate-100 bg-white/80 backdrop-blur-md z-10">
-          <div className="relative group">
-            <input
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-5 pr-14 text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#01334c]/20 focus:border-[#01334c] transition-all shadow-inner group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-200/50"
-            />
-
-            <button
-              onClick={() => sendMessage()}
-              disabled={!userInput.trim() || isTyping}
-              className="absolute right-3 top-3 p-2 bg-[#01334c] hover:bg-[#024466] disabled:opacity-50 disabled:hover:bg-[#01334c] rounded-xl text-white transition-all duration-300 shadow-lg shadow-[#01334c]/20 hover:shadow-[#01334c]/40 active:scale-95"
-            >
-              <ArrowUp className="w-4 h-4" />
-            </button>
-          </div>
-          <p className="text-center text-[10px] text-slate-400 mt-3 font-medium tracking-wide">
-            AI-generated content may be inaccurate. Check important info.
-          </p>
+          {isGuestLocked ? (
+            /* ── Guest lockout UI ── */
+            <div className="flex flex-col items-center gap-3 py-2">
+              <div className="flex items-center gap-2 text-[#01334c]">
+                <Lock className="w-4 h-4" />
+                <span className="text-xs font-bold">You've used your 4 free messages</span>
+              </div>
+              <p className="text-[11px] text-slate-500 text-center leading-relaxed">
+                Your profile progress is saved. <br />
+                <span className="font-semibold text-slate-700">Create a free account</span> to keep building and download your profile.
+              </p>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="w-full py-3.5 rounded-2xl bg-[#01334c] text-white text-sm font-black tracking-wide shadow-xl shadow-[#01334c]/30 hover:bg-[#024466] hover:shadow-[#01334c]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                Create Free Account — It's Fast
+              </button>
+              <p className="text-[10px] text-slate-400">
+                No credit card • Takes 30 seconds
+              </p>
+            </div>
+          ) : (
+            /* ── Normal input ── */
+            <>
+              {!user && guestMsgCount > 0 && (
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: GUEST_MSG_LIMIT }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1 w-5 rounded-full transition-all duration-300 ${i < guestMsgCount ? "bg-[#01334c]" : "bg-slate-200"
+                          }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    {guestMsgCount}/{GUEST_MSG_LIMIT} free messages
+                  </span>
+                </div>
+              )}
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 pl-5 pr-14 text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#01334c]/20 focus:border-[#01334c] transition-all shadow-inner group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-200/50"
+                />
+                <button
+                  onClick={() => sendMessage()}
+                  disabled={!userInput.trim() || isTyping}
+                  className="absolute right-3 top-3 p-2 bg-[#01334c] hover:bg-[#024466] disabled:opacity-50 disabled:hover:bg-[#01334c] rounded-xl text-white transition-all duration-300 shadow-lg shadow-[#01334c]/20 hover:shadow-[#01334c]/40 active:scale-95"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-center text-[10px] text-slate-400 mt-3 font-medium tracking-wide">
+                AI-generated content may be inaccurate. Check important info.
+              </p>
+            </>
+          )}
         </div>
       </aside>
 
@@ -974,6 +1027,8 @@ export default function Home() {
           onMerge={mergeProfileData}
           onComplete={handleGuidedReviewComplete}
           previewContainerId="printableArea"
+          user={user}
+          onShowAuth={() => setShowAuthModal(true)}
         />
       )}
 

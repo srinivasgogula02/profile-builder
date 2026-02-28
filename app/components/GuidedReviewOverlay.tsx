@@ -20,6 +20,7 @@ import {
   Lightbulb,
   Upload,
   ImageIcon,
+  Lock,
 } from "lucide-react";
 import { ProfileData } from "../lib/schema";
 import { enhanceProfileSection } from "../lib/groq";
@@ -256,12 +257,17 @@ const REVIEW_SECTIONS: ReviewSection[] = [
 // Props
 // ────────────────────────────────────────────────────────────────────────────────
 
+// Guests can freely edit up to this many steps (0-indexed), then we gate.
+const GUEST_FREE_STEPS = 3;
+
 interface GuidedReviewOverlayProps {
   profileData: Partial<ProfileData>;
   onUpdateField: (field: keyof ProfileData, value: unknown) => void;
   onMerge: (data: Partial<ProfileData>) => void;
   onComplete: () => void;
   previewContainerId: string;
+  user?: unknown;
+  onShowAuth?: () => void;
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -274,6 +280,8 @@ export default function GuidedReviewOverlay({
   onMerge,
   onComplete,
   previewContainerId,
+  user,
+  onShowAuth,
 }: GuidedReviewOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<{
@@ -597,6 +605,12 @@ export default function GuidedReviewOverlay({
       setLocalEdits({});
     }
 
+    // Guest gate: block forward navigation past allowed steps
+    if (!user && currentStep >= GUEST_FREE_STEPS) {
+      onShowAuth?.();
+      return;
+    }
+
     if (currentStep < totalSteps - 1) {
       setIsTransitioning(true);
       setTimeout(() => {
@@ -610,7 +624,7 @@ export default function GuidedReviewOverlay({
     setTimeout(() => {
       navDebounceRef.current = false;
     }, 500);
-  }, [currentStep, totalSteps, localEdits, onMerge, onComplete]);
+  }, [currentStep, totalSteps, localEdits, onMerge, onComplete, user, onShowAuth]);
 
   const goPrev = useCallback(() => {
     if (navDebounceRef.current || currentStep === 0) return;
@@ -1715,66 +1729,114 @@ export default function GuidedReviewOverlay({
 
           {/* Edit fields */}
           <div className="px-6 py-5">
-            {/* AI Suggestion Overlay */}
-            {aiSuggestion && (
-              <div className="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4 animate-fade-in-up shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-violet-900">
-                      AI Enhancement Ready
-                    </h4>
-                    <p className="text-[10px] text-violet-600">
-                      Review the suggested improvements
-                    </p>
+            {/* ── Guest login gate ── */}
+            {!user && currentStep >= GUEST_FREE_STEPS ? (
+              <div className="flex flex-col items-center text-center gap-5 py-4">
+                {/* Animated lock icon */}
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full bg-[#01334c]/5 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border-2 border-[#01334c]/20 animate-ping" style={{ animationDuration: '2.5s' }} />
+                    <Lock className="w-7 h-7 text-[#01334c]" />
                   </div>
                 </div>
-
-                <div className="space-y-1.5 mb-3 bg-white/60 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar border border-violet-100/50">
-                  {Object.entries(aiSuggestion).map(([key, value]) => (
-                    <div key={key} className="text-[11px] text-slate-700">
-                      <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-1.5">
-                        {key}:
-                      </span>
-                      <span className="leading-relaxed">
-                        {typeof value === "string"
-                          ? value
-                          : Array.isArray(value)
-                            ? value.join(", ")
-                            : JSON.stringify(value)}
-                      </span>
-                    </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 mb-1.5">
+                    You're on a roll! 🎉
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    You've completed <span className="text-[#01334c] font-bold">{GUEST_FREE_STEPS} sections</span> of your profile. <br />
+                    <span className="text-slate-700 font-semibold">Free accounts save everything permanently</span> — including all your edits so far.
+                  </p>
+                </div>
+                {/* Benefits list */}
+                <ul className="w-full text-left space-y-2">
+                  {[
+                    'Your profile saved forever',
+                    'Complete all remaining sections',
+                    'Download as PDF anytime',
+                    'One-click apply to jobs',
+                  ].map((b, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[9px] font-black flex-shrink-0">✓</span>
+                      {b}
+                    </li>
                   ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      onMerge(aiSuggestion);
-                      setAiSuggestion(null);
-                    }}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
-                  >
-                    <Check className="w-3 h-3" /> Accept & Use
-                  </button>
-                  <button
-                    onClick={() => setAiSuggestion(null)}
-                    className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
-                  >
-                    Discard
-                  </button>
-                </div>
+                </ul>
+                {/* CTA */}
+                <button
+                  onClick={onShowAuth}
+                  className="w-full py-3.5 rounded-2xl bg-[#01334c] text-white text-sm font-black tracking-wide shadow-xl shadow-[#01334c]/30 hover:bg-[#024466] hover:shadow-[#01334c]/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  Create Free Account
+                </button>
+                <p className="text-[10px] text-slate-400">
+                  No credit card. Takes 30 seconds.
+                </p>
               </div>
-            )}
+            ) : (
+              <>
+                {aiSuggestion && (
+                  <div className="mb-5 bg-violet-50 border border-violet-100 rounded-2xl p-4 animate-fade-in-up shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-violet-900">
+                          AI Enhancement Ready
+                        </h4>
+                        <p className="text-[10px] text-violet-600">
+                          Review the suggested improvements
+                        </p>
+                      </div>
+                    </div>
 
-            {/* Main Input Fields */}
-            {renderEditFields()}
+                    <div className="space-y-1.5 mb-3 bg-white/60 rounded-xl p-3 max-h-40 overflow-y-auto custom-scrollbar border border-violet-100/50">
+                      {Object.entries(aiSuggestion).map(([key, value]) => (
+                        <div key={key} className="text-[11px] text-slate-700">
+                          <span className="font-bold text-violet-700 uppercase tracking-wider text-[10px] mr-1.5">
+                            {key}:
+                          </span>
+                          <span className="leading-relaxed">
+                            {typeof value === "string"
+                              ? value
+                              : Array.isArray(value)
+                                ? value.join(", ")
+                                : JSON.stringify(value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          onMerge(aiSuggestion);
+                          setAiSuggestion(null);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider hover:bg-violet-700 transition-colors shadow-lg shadow-violet-200 active:scale-95"
+                      >
+                        <Check className="w-3 h-3" /> Accept & Use
+                      </button>
+                      <button
+                        onClick={() => setAiSuggestion(null)}
+                        className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
+                      >
+                        Discard
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Main Input Fields */}
+                {renderEditFields()}
+              </>
+            )}
           </div>
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer Actions — fixed at bottom */}
         <div className="bg-slate-50 border-t border-slate-100 px-5 py-3 flex-shrink-0 space-y-3">
           {/* AI Controls */}
           <div className="flex items-center gap-2">
@@ -1816,17 +1878,18 @@ export default function GuidedReviewOverlay({
             </button>
 
             <button
-              onClick={goNext}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#01334c] text-white text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-[#01334c]/20 hover:bg-[#024466] hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
+              onClick={(!user && currentStep >= GUEST_FREE_STEPS) ? onShowAuth : goNext}
+              className={`flex items-center gap-1.5 px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-lg transition-all whitespace-nowrap ${!user && currentStep >= GUEST_FREE_STEPS
+                ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/30 hover:scale-105 active:scale-95'
+                : 'bg-[#01334c] text-white shadow-[#01334c]/20 hover:bg-[#024466] hover:scale-105 active:scale-95'
+                }`}
             >
-              {currentStep === totalSteps - 1 ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Finish
-                </>
+              {!user && currentStep >= GUEST_FREE_STEPS ? (
+                <><Lock className="w-3.5 h-3.5" /> Login to Continue</>
+              ) : currentStep === totalSteps - 1 ? (
+                <><Check className="w-3.5 h-3.5" /> Finish</>
               ) : (
-                <>
-                  Next <ChevronRight className="w-3.5 h-3.5" />
-                </>
+                <>Next <ChevronRight className="w-3.5 h-3.5" /></>
               )}
             </button>
           </div>
@@ -1839,3 +1902,4 @@ export default function GuidedReviewOverlay({
   if (!mounted) return null;
   return createPortal(overlayContent, document.body);
 }
+
