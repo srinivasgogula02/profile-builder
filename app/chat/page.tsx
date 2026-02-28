@@ -485,54 +485,80 @@ export default function Home() {
     <div className="bg-white text-slate-900 h-screen overflow-hidden flex selection:bg-[#01334c] selection:text-white font-[family-name:var(--font-inter)]">
       {/* Onboarding Choice Modal */}
       {showOnboardingChoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl shadow-slate-900/20 w-full max-w-md mx-4 overflow-hidden border border-slate-100 animate-slide-up p-8 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[4px] animate-fade-in p-4 sm:p-6">
+          <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 w-full max-w-3xl overflow-hidden border border-slate-100 animate-slide-up">
 
-            <div className="w-16 h-16 rounded-2xl bg-[#01334c]/5 flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="w-8 h-8 text-[#01334c]" />
-            </div>
+            <div className="p-8 md:p-12 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#01334c]/5 to-[#01334c]/10 flex items-center justify-center mx-auto mb-6 ring-4 ring-white shadow-sm">
+                <Sparkles className="w-8 h-8 text-[#01334c]" />
+              </div>
 
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-3">
-              How would you like to start?
-            </h2>
-            <p className="text-slate-500 mb-8">
-              We can extract your professional history from LinkedIn or help you build a new profile from scratch.
-            </p>
+              <h2 className="text-3xl font-extrabold text-[#01334c] tracking-tight mb-4">
+                How would you like to start?
+              </h2>
+              <p className="text-slate-500 md:text-lg max-w-xl mx-auto mb-10">
+                Choose whether you want a magical head start using your existing LinkedIn data or if you prefer to build block by block.
+              </p>
 
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setShowOnboardingChoice(false);
-                  setShowLinkedinModal(true);
-                }}
-                className="w-full py-4 rounded-xl bg-[#0077b5] hover:bg-[#006097] text-white text-sm font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-[#0077b5]/20 hover:shadow-[#0077b5]/40 active:scale-[0.98] flex items-center justify-center gap-3"
-              >
-                <Linkedin className="w-5 h-5" />
-                <span>Import from LinkedIn</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  const doSkip = () => {
+              <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                {/* LinkedIn Option */}
+                <button
+                  onClick={() => {
                     setShowOnboardingChoice(false);
-                    setTempProfileData({});
-                    setShowEditForm(true);
-                    // Mark LinkedIn as completed (skipped) so popup won't show on refresh
-                    setHasCompletedLinkedIn(true);
-                    if (user) markLinkedinImported(user.id);
-                  };
-                  if (!requireAuth(doSkip)) return;
-                  doSkip();
-                }}
-                className="w-full py-4 rounded-xl bg-white border-2 border-slate-100 hover:border-[#01334c]/20 hover:bg-slate-50 text-slate-600 hover:text-[#01334c] text-sm font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-3"
-              >
-                <Pencil className="w-5 h-5" />
-                <span>Continue from Scratch</span>
-              </button>
+                    setShowLinkedinModal(true);
+                  }}
+                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-[#0077b5]/20 rounded-[1.5rem] hover:border-[#0077b5] hover:shadow-[0_8px_30px_rgba(0,119,181,0.12)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#0077b5]/10"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#0077b5]/5 rounded-full blur-3xl -mr-16 -mt-16 transition-transform group-hover:scale-150 duration-700 pointer-events-none"></div>
+
+                  <div className="w-14 h-14 bg-[#0077b5]/10 text-[#0077b5] rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#0077b5] group-hover:text-white transition-colors duration-300 shadow-sm">
+                    <Linkedin className="w-7 h-7" />
+                  </div>
+
+                  <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-[#0077b5] transition-colors">Import from LinkedIn</h3>
+                  <p className="text-sm text-slate-500 text-center leading-relaxed mb-8 flex-grow">
+                    Fastest way to start. We'll extract your timeline, roles, and skills directly from your public profile in seconds.
+                  </p>
+
+                  <div className="w-full py-3.5 rounded-xl bg-[#0077b5] text-white text-sm font-bold tracking-wide transition-all duration-300 text-center mt-auto shadow-md shadow-[#0077b5]/20 group-hover:shadow-[#0077b5]/40 group-hover:-translate-y-0.5">
+                    Recommended 🔥
+                  </div>
+                </button>
+
+                {/* Scratch Option */}
+                <button
+                  onClick={() => {
+                    const doSkip = () => {
+                      setShowOnboardingChoice(false);
+                      setTempProfileData({});
+                      setShowEditForm(true);
+                      setHasCompletedLinkedIn(true);
+                      if (user) markLinkedinImported(user.id);
+                    };
+                    if (!requireAuth(doSkip)) return;
+                    doSkip();
+                  }}
+                  className="group relative flex flex-col items-center p-8 bg-white border-2 border-slate-100 rounded-[1.5rem] hover:border-[#01334c]/30 hover:shadow-[0_8px_30px_rgba(1,51,76,0.08)] transition-all duration-300 active:scale-[0.98] overflow-hidden focus:outline-none focus:ring-4 focus:ring-[#01334c]/5"
+                >
+                  <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-[#01334c]/5 group-hover:text-[#01334c] transition-colors duration-300 shadow-sm border border-slate-100">
+                    <Pencil className="w-7 h-7" />
+                  </div>
+
+                  <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-[#01334c] transition-colors">Start from Scratch</h3>
+                  <p className="text-sm text-slate-500 text-center leading-relaxed mb-8 flex-grow">
+                    Perfect if you want full control from the beginning or don't have an up-to-date LinkedIn profile to sync with.
+                  </p>
+
+                  <div className="w-full py-3.5 rounded-xl bg-slate-50 text-slate-500 text-sm font-bold tracking-wide group-hover:bg-[#01334c]/5 group-hover:text-[#01334c] transition-all duration-300 text-center mt-auto">
+                    Choose Manual
+                  </div>
+                </button>
+              </div>
+
+              <p className="text-[13px] text-slate-400 mt-8 font-medium">
+                Don't worry, you can always edit every detail later regardless of how you start.
+              </p>
             </div>
-            <p className="text-[10px] text-slate-400 mt-6 max-w-xs mx-auto">
-              Importing from LinkedIn gives you a head start, but you can always edit everything later.
-            </p>
           </div>
         </div>
       )}
