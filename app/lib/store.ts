@@ -67,8 +67,10 @@ interface ProfileState {
 
     // Multi-profile state
     activeProfileId: string | null;
+    activeTemplateId: string | null;
     profilesList: any[]; // we use any to avoid importing db.ts and causing circular deps
     setActiveProfileId: (id: string | null) => void;
+    setActiveTemplateId: (id: string | null) => void;
     setProfilesList: (profiles: any[]) => void;
     loadChat: (profile: any) => void;
 }
@@ -194,6 +196,7 @@ export const useProfileStore = create<ProfileState>()(
                 conversationPhase: 'greeting',
                 detectedProfession: null,
                 activeProfileId: null,
+                activeTemplateId: null,
                 hasCompletedLinkedIn: false,
             }),
 
@@ -211,8 +214,10 @@ export const useProfileStore = create<ProfileState>()(
 
             // Multi-profile state
             activeProfileId: null,
+            activeTemplateId: null,
             profilesList: [],
             setActiveProfileId: (id) => set({ activeProfileId: id }),
+            setActiveTemplateId: (id) => set({ activeTemplateId: id }),
             setProfilesList: (profiles) => set({ profilesList: profiles }),
             loadChat: (profile) => {
                 // Find existing messages or fallback to initial message if undefined/empty
@@ -232,6 +237,7 @@ export const useProfileStore = create<ProfileState>()(
 
                 set({
                     activeProfileId: profile.id,
+                    activeTemplateId: profile.template_id || null,
                     profileData: { ...INITIAL_PROFILE, ...profile.profile_data },
                     messages: loadedMessages,
                     hasCompletedLinkedIn: profile.linkedin_imported,
@@ -249,6 +255,7 @@ export const useProfileStore = create<ProfileState>()(
                 conversationPhase: state.conversationPhase,
                 hasCompletedLinkedIn: state.hasCompletedLinkedIn,
                 activeProfileId: state.activeProfileId,
+                activeTemplateId: state.activeTemplateId,
             }),
         }
     )

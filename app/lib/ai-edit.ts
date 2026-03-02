@@ -79,3 +79,49 @@ export async function modifyTemplateWithAI(inputs: {
         throw error;
     }
 }
+
+const SYNC_SYSTEM_PROMPT = `You are an expert data parsing AI.
+Your task is to compare a modified HTML string (which has been visually edited by a user) against the original JSON data object that populated it.
+Identify any text that the user has changed in the HTML, and update the corresponding keys in the JSON data object perfectly.
+
+RULES:
+1. Return ONLY a valid JSON object. No markdown, no explanations, no code blocks (e.g., do NOT wrap in \`\`\`json).
+2. The JSON keys MUST exactly match the keys in the provided original JSON data. Do not invent new keys.
+3. If the user changed a name, update "fullName". If they changed a paragraph, update "aboutMe", etc.
+4. If no meaningful text changes are detected, just return the original JSON data.
+`;
+
+export async function syncTemplateDataWithAI(inputs: {
+    html: string;
+    currentData: any;
+}) {
+    const { html, currentData } = inputs;
+
+    const userMessage = `
+    ORIGINAL JSON DATA:
+    ${JSON.stringify(currentData, null, 2)}
+
+    MODIFIED HTML:
+    ${html}
+
+    Output the updated JSON object.
+    `;
+
+    try {
+        const result = await generateText({
+            model: getModel(),
+            system: SYNC_SYSTEM_PROMPT,
+            prompt: userMessage,
+        });
+
+        let jsonText = result.text.trim();
+        // Clean markdown code blocks if the LLM ignores instructions
+        jsonText = jsonText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.error("Error in syncTemplateDataWithAI:", error);
+        throw error;
+    }
+}
+

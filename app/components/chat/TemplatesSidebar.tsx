@@ -10,6 +10,7 @@ interface TemplatesSidebarProps {
     onClose: () => void;
     isPremium?: boolean;
     onShowPayment?: () => void;
+    onSelectTemplate?: (templateId: string) => void;
 }
 
 interface Template {
@@ -28,7 +29,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     Academic: "bg-amber-50 text-amber-700",
 };
 
-export default function TemplatesSidebar({ isOpen, onClose, isPremium = false, onShowPayment }: TemplatesSidebarProps) {
+export default function TemplatesSidebar({ isOpen, onClose, isPremium = false, onShowPayment, onSelectTemplate }: TemplatesSidebarProps) {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -59,11 +60,14 @@ export default function TemplatesSidebar({ isOpen, onClose, isPremium = false, o
         fetchTemplates();
     }, [isOpen, templates.length]);
 
-    const handleTemplateClick = (e: React.MouseEvent) => {
+    const handleTemplateClick = (e: React.MouseEvent, templateId: string) => {
+        e.preventDefault();
         if (!isPremium) {
-            e.preventDefault();
             onShowPayment?.();
         } else {
+            if (onSelectTemplate) {
+                onSelectTemplate(templateId);
+            }
             onClose();
         }
     };
@@ -150,11 +154,11 @@ export default function TemplatesSidebar({ isOpen, onClose, isPremium = false, o
                     ) : (
                         <div className="grid grid-cols-2 gap-3">
                             {templates.map((template) => (
-                                <Link
+                                <a
                                     key={template.id}
-                                    href={isPremium ? `/design/${template.id}` : "#"}
-                                    onClick={handleTemplateClick}
-                                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-[#01334c]/40 hover:shadow-lg hover:shadow-[#01334c]/10 transition-all duration-300 active:scale-[0.98] relative"
+                                    href="#"
+                                    onClick={(e) => handleTemplateClick(e, template.id)}
+                                    className="group flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:border-[#01334c]/40 hover:shadow-lg hover:shadow-[#01334c]/10 transition-all duration-300 active:scale-[0.98] relative cursor-pointer"
                                 >
                                     {/* Thumbnail */}
                                     <div className="relative w-full aspect-[3/4] bg-slate-100 overflow-hidden">
@@ -205,7 +209,7 @@ export default function TemplatesSidebar({ isOpen, onClose, isPremium = false, o
                                             <Lock className="w-3 h-3 text-amber-900" />
                                         </div>
                                     )}
-                                </Link>
+                                </a>
                             ))}
                         </div>
                     )}

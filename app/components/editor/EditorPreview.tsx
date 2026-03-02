@@ -9,9 +9,10 @@ interface EditorPreviewProps {
     onHtmlChange: (newHtml: string) => void;
     width?: number; // Base width (e.g., 794 for A4)
     height?: number; // Base height (e.g., 1123 for A4)
+    skipRenderRecompile?: boolean;
 }
 
-export default function EditorPreview({ html, data, onHtmlChange, width = 794, height = 1123 }: EditorPreviewProps) {
+export default function EditorPreview({ html, data, onHtmlChange, width = 794, height = 1123, skipRenderRecompile = false }: EditorPreviewProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [compiledHtml, setCompiledHtml] = useState('');
     const lastEmittedHtml = useRef('');
@@ -20,6 +21,13 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
     useEffect(() => {
         try {
             if (!html) return;
+
+            // Smart Rendering Loop Interceptor:
+            // If the change came from the user typing in the iframe, the React data state changes, 
+            // but we DO NOT want to recompile Handlebars, because it will override their active cursor focus.
+            if (skipRenderRecompile && compiledHtml) {
+                return;
+            }
 
             // If the incoming HTML matches what we just emitted from the iframe, 
             // skip re-compilation to prevent re-rendering and losing focus.
@@ -288,24 +296,34 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
                     // TEXT CLICK HANDLING
                     if (target.getAttribute('contenteditable') === 'true') return;
 
-                    // Only enable editing for text-like elements
-                    const tag = target.tagName;
-                    if (['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'DIV', 'LI', 'A'].includes(tag)) {
-                        if (target.children.length === 0 || target.textContent.length < 1000) {
-                            console.log("Activating edit mode for", tag);
-                            target.setAttribute('contenteditable', 'true');
-                            target.focus();
+                    // Deterministic Binding: Only allow editing if the template author explicitly added a data-field bound to the JSON schema.
+                    const fieldName = target.getAttribute('data-field') || target.closest('[data-field]')?.getAttribute('data-field');
+                    
+                    if (fieldName) {
+                        const editableTarget = target.hasAttribute('data-field') ? target : target.closest('[data-field]');
+                        // We must ensure it's not a generic block without text
+                        if (editableTarget.textContent.length < 2000) {
+                            console.log("Activating Canva bound edit mode for field:", fieldName);
+                            editableTarget.setAttribute('contenteditable', 'true');
+                            editableTarget.focus();
                             e.preventDefault();
                             e.stopPropagation();
                         }
                     }
                 }, true);
 
+                // Protect Handlebars structure: strip all HTML formatting on paste
+                document.body.addEventListener('paste', (e) => {
+                    if (document.activeElement?.getAttribute('contenteditable') === 'true') {
+                        e.preventDefault();
+                        const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+                        document.execCommand('insertText', false, text);
+                    }
+                });
+
                 const sendUpdate = () => {
-                     // Clone to clean
                      const clone = document.documentElement.cloneNode(true);
                      
-                     // Remove our injected stuff
                      const script = clone.querySelector('#editor-script');
                      if(script) script.remove();
                      const style = clone.querySelector('#editor-style');
@@ -313,17 +331,12 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
                      const btn = clone.querySelector('.img-overlay-btn');
                      if(btn) btn.remove();
                      
-                     // Remove properties we added
                      clone.querySelectorAll('*').forEach(el => {
                          el.removeAttribute('data-default');
                          el.removeAttribute('data-replaced');
-                         el.removeAttribute('data-has-bg-image'); // clean this up
+                         el.removeAttribute('data-has-bg-image');
                          if (el.dataset) delete el.dataset.hovered;
                          
-                         // Only remove cursor/outline if we added it (tricky, but safe to clear inline styles we likely added)
-                         // We should be specific to avoid clearing user styles? 
-                         // Ideally we only clear if it matches what we set.
-                         // For now, clearing these specific ones is okay as they are interaction styles.
                          if (el.tagName === 'IMG' || el.style.cursor === 'pointer') {
                              el.style.cursor = '';
                              el.style.outline = '';
@@ -331,16 +344,35 @@ export default function EditorPreview({ html, data, onHtmlChange, width = 794, h
                          }
                      });
                      
-                     // Remove html-to-image script if it exists
                      const hti = clone.querySelector('script[src*="html-to-image"]');
                      if(hti) hti.remove();
 
                      window.parent.postMessage({ type: 'HTML_UPDATE', html: clone.outerHTML }, '*');
                 };
 
+                // Deterministic Canvas Data Syncing:
+                // Instead of relying on an AI to parse the whole string later, we instantly sync the specific JSON field.
                 document.body.addEventListener('input', (e) => {
-                     sendUpdate();
+                     const target = e.target;
+                     if (target.getAttribute && target.getAttribute('contenteditable') === 'true') {
+                         const fieldName = target.getAttribute('data-field');
+                         if (fieldName) {
+                             // Send deterministic key-value payload
+                             window.parent.postMessage({ 
+                                 type: 'FIELD_UPDATE', 
+                                 field: fieldName, 
+                                 value: target.innerText || target.textContent 
+                             }, '*');
+                         }
+                     }
                 });
+                
+                // Fallback for full HTML updates (used primarily for image changes or initial load)
+                document.body.addEventListener('blur', (e) => {
+                     if (e.target.getAttribute && e.target.getAttribute('contenteditable') === 'true') {
+                         sendUpdate();
+                     }
+                }, true);
                 
                 document.querySelectorAll('a').forEach(a => {
                     a.addEventListener('click', (e) => e.preventDefault());

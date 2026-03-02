@@ -43,6 +43,7 @@ import ChatsSidebar from "../components/chat/ChatsSidebar";
 import PaymentModal from "../components/PaymentModal";
 import TrialBanner from "../components/TrialBanner";
 import SharePopup from "../components/chat/SharePopup";
+import EditorPreview from "../components/editor/EditorPreview";
 import { isTrialActive } from "../lib/trial";
 import Image from "next/image";
 import Link from "next/link";
@@ -78,6 +79,8 @@ export default function Home() {
     setShowGuidedReview,
     activeProfileId,
     setActiveProfileId,
+    activeTemplateId,
+    setActiveTemplateId,
     profilesList,
     setProfilesList,
     loadChat,
@@ -110,6 +113,18 @@ export default function Home() {
   const [showChatsSidebar, setShowChatsSidebar] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
 
+  const [activeTemplateMeta, setActiveTemplateMeta] = useState<any>(null);
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const [hasManualIframeEdits, setHasManualIframeEdits] = useState(false);
+
+  // Bootstrap template if activeTemplateId is present from store on mount
+  useEffect(() => {
+    if (activeTemplateId && !activeTemplateMeta && !templateLoading) {
+      loadTemplate(activeTemplateId);
+    }
+  }, [activeTemplateId]);
+
+
   // Edit Form State
   const [showEditForm, setShowEditForm] = useState(false);
   const [tempProfileData, setTempProfileData] =
@@ -122,6 +137,11 @@ export default function Home() {
   // Cooldown ref to prevent rapid-fire API calls
   const lastActionTimeRef = useRef<number>(0);
   const ACTION_COOLDOWN_MS = 2000; // 2 seconds between actions
+
+  // Deterministic binding loop-preventer
+  // When true, we know `profileData` changed because the user typed in the iframe.
+  // We can skip forcing a Handlebars recompile to protect their cursor.
+  const syncOrigin = useRef<'iframe' | 'system'>('system');
 
   const isOnCooldown = (): boolean => {
     const now = Date.now();
@@ -139,11 +159,47 @@ export default function Home() {
   // Update profile HTML whenever data changes
   useEffect(() => {
     setLoadingPreview(true);
-    const html = renderProfile(profileData);
-    setProfileHtml(html);
-    const timer = setTimeout(() => setLoadingPreview(false), 300);
+    let timer: NodeJS.Timeout;
+
+    if (!activeTemplateId) {
+      // Default PDF static style
+      const html = renderProfile(profileData);
+      setProfileHtml(html);
+      timer = setTimeout(() => setLoadingPreview(false), 300);
+    } else {
+      // If a template is active, its iframe will push the compiled HTML upward,
+      // but we still want to indicate the UI is instantly ready (or wait for the iframe).
+      // For visual snap, we just let it load.
+      timer = setTimeout(() => setLoadingPreview(false), 300);
+    }
+
     return () => clearTimeout(timer);
-  }, [profileData]);
+  }, [profileData, activeTemplateId]);
+
+  // Handle loading specific templates
+  const loadTemplate = async (templateId: string) => {
+    if (!templateId) {
+      setActiveTemplateId(null);
+      setActiveTemplateMeta(null);
+      return;
+    }
+
+    try {
+      setTemplateLoading(true);
+      const res = await fetch(`/api/template/${templateId}`);
+      if (!res.ok) throw new Error("Template not found");
+      const data = await res.json();
+
+      setActiveTemplateMeta(data); // data.html will be passed directly
+      setActiveTemplateId(templateId);
+    } catch (e) {
+      console.error("Failed to load template:", e);
+      setActiveTemplateId(null);
+      setActiveTemplateMeta(null);
+    } finally {
+      setTemplateLoading(false);
+    }
+  };
 
   // Update section progress whenever profile data changes
   useEffect(() => {
@@ -235,8 +291,16 @@ export default function Home() {
 
     saveTimerRef.current = setTimeout(async () => {
       setIsSaving(true);
-      const html = renderProfile(profileData);
-      const savedRow = await saveProfile(user.id, profileData, messages, html, activeProfileId || undefined);
+      // Determine what HTML string to save based on template state
+      let htmlToSave = profileHtml;
+      // If activeTemplateId exists, `profileHtml` is continuously mutated by EditorPreview's onHtmlChange.
+
+      if (!activeTemplateId) {
+        // Re-generate robust basic layout for fallback sync just in case
+        htmlToSave = renderProfile(profileData);
+      }
+
+      const savedRow = await saveProfile(user.id, profileData, messages, htmlToSave, activeProfileId || undefined, activeTemplateId);
 
       if (savedRow && !activeProfileId) {
         setActiveProfileId(savedRow.id);
@@ -391,6 +455,9 @@ export default function Home() {
     setIsTyping(true);
 
     try {
+      // Chat triggered update comes from system, so Handlebars must recompile
+      syncOrigin.current = 'system';
+
       const allMessages = [
         ...messages,
         { text: messageText, sender: "user" as const },
@@ -1188,9 +1255,22 @@ export default function Home() {
                 className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-[#01334c] text-xs font-bold uppercase tracking-wider border border-slate-200 group-hover:bg-[#01334c] group-hover:text-white group-hover:border-[#01334c] transition-all duration-300 shadow-sm"
               >
                 <LayoutTemplate className="w-3.5 h-3.5" />
-                <span>Themes</span>
-                <span className="text-[9px] font-black bg-[#01334c]/10 group-hover:bg-white/20 text-[#01334c] group-hover:text-white px-1.5 py-0.5 rounded-full transition-colors">NEW</span>
+                <span>{activeTemplateId ? activeTemplateMeta?.name || 'Theme Active' : 'Themes'}</span>
+                {!activeTemplateId && <span className="text-[9px] font-black bg-[#01334c]/10 group-hover:bg-white/20 text-[#01334c] group-hover:text-white px-1.5 py-0.5 rounded-full transition-colors">NEW</span>}
               </button>
+              {activeTemplateId && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTemplateId(null);
+                    setActiveTemplateMeta(null);
+                  }}
+                  className="absolute -top-2 -right-2 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full p-1 shadow-sm transition-colors z-10"
+                  title="Remove Theme"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
             <button
               onClick={() => setShowGuidedReview(true)}
@@ -1252,9 +1332,39 @@ export default function Home() {
 
           <div
             id="printableArea"
-            className={`a4-page relative z-10 transition-all duration-700 ease-out transform origin-top ${loadingPreview ? "blur-sm scale-[0.99] opacity-90" : "blur-0 scale-100 opacity-100"} shadow-2xl shadow-slate-200`}
+            className={`a4-page relative z-10 transition-all duration-700 ease-out transform origin-top shadow-2xl shadow-slate-200 ${activeTemplateId ? "hidden" : ""}`}
             dangerouslySetInnerHTML={{ __html: typeof window !== 'undefined' ? require('dompurify').sanitize(profileHtml) : profileHtml }}
           ></div>
+
+          {activeTemplateId && activeTemplateMeta && !templateLoading && (
+            <div className="relative z-10 w-full flex justify-center transition-all duration-700 shadow-2xl">
+              <EditorPreview
+                html={activeTemplateMeta.html}
+                data={{
+                  ...profileData,
+                  fullName: profileData.fullName || 'Your Name',
+                  tagline: profileData.tagline || 'Your Professional Title',
+                }}
+                skipRenderRecompile={syncOrigin.current === 'iframe'}
+                onHtmlChange={(newHtml) => {
+                  if (newHtml !== profileHtml) {
+                    setProfileHtml(newHtml);
+                  }
+                }}
+                width={activeTemplateMeta.dimensions?.width}
+                height={activeTemplateMeta.dimensions?.height}
+              />
+            </div>
+          )}
+
+          {templateLoading && (
+            <div className="relative z-10 a4-page flex items-center justify-center shadow-2xl bg-white/50 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-10 h-10 text-[#01334c] animate-spin" />
+                <span className="text-[#01334c] font-bold tracking-widest uppercase text-sm">Loading Theme...</span>
+              </div>
+            </div>
+          )}
 
           <div className="h-20"></div>
         </div>
@@ -1266,6 +1376,7 @@ export default function Home() {
         onClose={() => setShowTemplates(false)}
         isPremium={effectivePremium}
         onShowPayment={() => setShowPaymentModal(true)}
+        onSelectTemplate={loadTemplate}
       />
 
       {/* Chats Sidebar */}

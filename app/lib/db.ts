@@ -10,6 +10,7 @@ export interface ProfileRow {
     preview_html: string | null;
     linkedin_imported: boolean;
     messages: any[]; // Store chat history
+    template_id: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -46,7 +47,8 @@ export async function saveProfile(
     profileData: Partial<ProfileData>,
     messages: any[] = [],
     previewHtml: string | null = null,
-    profileId?: string
+    profileId?: string,
+    templateId?: string | null
 ): Promise<ProfileRow | null> {
 
     let query;
@@ -58,6 +60,7 @@ export async function saveProfile(
             .update({
                 profile_data: profileData,
                 preview_html: previewHtml,
+                template_id: templateId || null,
                 messages: messages,
                 updated_at: new Date().toISOString()
             })
@@ -73,6 +76,7 @@ export async function saveProfile(
                 user_id: userId,
                 profile_data: profileData,
                 preview_html: previewHtml,
+                template_id: templateId || null,
                 messages: messages
             })
             .select()
